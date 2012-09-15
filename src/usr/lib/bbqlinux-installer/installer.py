@@ -28,7 +28,8 @@ class Setup(object):
     password2 = None
     real_name = None
     bios_type = 'bios'
-    grub_device = None
+    bootloader_type = None
+    bootloader_device = None
     disks = []
     target_disk = None
     
@@ -47,8 +48,9 @@ class Setup(object):
             print "user: %s (%s)" % (self.username, self.real_name)
             print "hostname: %s " % self.hostname
             print "passwords: %s - %s" % (self.password1, self.password2)
-            print "bios_type: %s" % self.bios_type 
-            print "grub_device: %s " % self.grub_device
+            print "bios_type: %s" % self.bios_type
+            print "bootloader_type: %s " % self.bootloader_type
+            print "bootloader_device: %s " % self.bootloader_device
             print "target_disk: %s " % self.target_disk
             print "disks: %s " % self.disks                       
             print "partitions:"

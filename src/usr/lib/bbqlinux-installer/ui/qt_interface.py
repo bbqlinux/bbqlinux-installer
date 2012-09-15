@@ -88,6 +88,10 @@ class InstallerWindow(QtGui.QMainWindow):
         # Connect the harddisk list
         self.connect(self.ui.harddiskListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.harddiskListItem_clicked)
 
+        # Connect the bootloader combo boxes
+        self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
+        self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
+
     def backButton_clicked(self):
         ''' Jump one page back '''
         index = self.getCurrentPageIndex()
@@ -306,6 +310,32 @@ class InstallerWindow(QtGui.QMainWindow):
         self.setup.target_disk = harddisk
         self.setup.print_setup()
 
+    def bootloaderTypeComboBox_activated(self, index):
+        ''' Get the clicked bootloader type '''
+        if (index is None):
+            return
+
+        bootloader_type = str(self.ui.bootloaderTypeComboBox.itemData(index, 32).toString())
+        
+        if(len(bootloader_type) < 1):
+            return
+        
+        self.setup.bootloader_type = bootloader_type
+        self.setup.print_setup()
+
+    def bootloaderDeviceComboBox_activated(self, index):
+        ''' Get the clicked bootloader device '''
+        if (index is None):
+            return
+
+        bootloader_device = str(self.ui.bootloaderDeviceComboBox.itemData(index, 32).toString())
+        
+        if(len(bootloader_device) < 1):
+            return
+        
+        self.setup.bootloader_device = bootloader_device
+        self.setup.print_setup()
+
     def getCurrentPageIndex(self):
         ''' Get the current page index '''
         return self.ui.pageStack.currentIndex()
@@ -332,8 +362,10 @@ class InstallerWindow(QtGui.QMainWindow):
             elif (index is self.PAGE_PARTITION):
                 self.ui.headLabel.setText(unicode("Partition your harddisk"))
                 self.build_partitions()
+                self.build_bootloader_partitions()
             elif (index is self.PAGE_ADVANCED):
                 self.ui.headLabel.setText(unicode("Advanced Settings"))
+                self.build_bootloader_list()                
             elif (index is self.PAGE_USER):
                 self.ui.headLabel.setText(unicode("Create your user account"))
             elif (index is self.PAGE_SUMMARY):
@@ -527,7 +559,6 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.keyboardModelComboBox.clear()
         cur_index = -1
         set_index = None
-        set_item = None
         for element in root_models.getElementsByTagName('model'):
             cur_index += 1
             conf = element.getElementsByTagName('configItem')[0]
@@ -550,6 +581,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
         root_layouts = root.getElementsByTagName('layoutList')[0]
         row = -1
+        set_item = None
         # Clear the table
         self.ui.keyboardLayoutTableWidget.clearContents()
         self.ui.keyboardLayoutTableWidget.setRowCount(0)
@@ -567,12 +599,15 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.keyboardLayoutTableWidget.setItem(row, 0, tableItem)
             item = self.getText(name.childNodes)
             if(item == self.setup.keyboard_layout):
-                tableItem.setSelected(True)
                 set_item = tableItem
                 self.setup.keyboard_layout_description = self.getText(desc.childNodes)
 
         if (not set_item is None):
-            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtGui.QAbstractItemView.EnsureVisible)
+            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtGui.QAbstractItemView.PositionAtCenter)
+            set_item.setSelected(True)
+            # Since the first scrollToItem doesn't work, do it again
+            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtGui.QAbstractItemView.PositionAtCenter)
+
         self.build_keyboard_variant_list()
 
     def build_keyboard_variant_list(self):
@@ -1017,6 +1052,53 @@ class InstallerWindow(QtGui.QMainWindow):
             print '-'*60
             traceback.print_exc(file=sys.stdout)
             print '-'*60
+
+    def build_bootloader_list(self):
+        self.ui.bootloaderTypeComboBox.clear()
+        cur_index = -1
+        if (self.setup.bios_type == "efi"):
+            bootloader_type = "grub-efi-x86_64"
+        else:
+            bootloader_type = "grub-bios"
+        cur_index += 1
+        self.ui.bootloaderTypeComboBox.addItem(QtCore.QString(bootloader_type))
+        self.ui.bootloaderTypeComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(bootloader_type)), 32)
+        self.setup.bootloader_type = bootloader_type
+        self.setup.print_setup()
+        
+    def build_bootloader_partitions(self):
+        self.ui.bootloaderDeviceComboBox.clear()
+        cur_index = -1
+        set_index = None
+        if (self.setup.bios_type == "efi"):
+            cur_index += 1
+            self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString("/boot/efi"))
+            self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("/boot/efi")), 32)
+            self.setup.bootloader_device = "/boot/efi"
+        else:
+            # Add disks
+            for disk in self.setup.disks:
+                cur_index += 1
+                self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString(disk))
+                self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(disk)), 32)
+                if (disk == self.setup.target_disk):
+                    set_index = cur_index
+                    self.setup.bootloader_device = disk
+            # Add partitions
+            partitions = commands.getoutput("fdisk -l | grep ^/dev/").split("\n")
+            for partition in partitions:
+                try:
+                    partition = partition.split()[0].strip()
+                    if partition.startswith("/dev/"):
+                        cur_index += 1
+                        self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString(partition))
+                        self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(partition)), 32)
+                except Exception, detail:
+                    print detail
+            # If we found the target disk, select it
+            if (not set_index is None):
+                self.ui.bootloaderDeviceComboBox.setCurrentIndex(set_index)
+        self.setup.print_setup()
 
 class QuestionDialog(object):
     def __init__(self, title, message):
