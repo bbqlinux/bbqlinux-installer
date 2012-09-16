@@ -11,6 +11,7 @@ import parted
 import string
 import subprocess
 import threading
+import time
 import traceback
 import urllib
 import urllib2
@@ -798,6 +799,35 @@ class InstallerWindow(QtGui.QMainWindow):
         if(len(self.setup.disks) > 0):
             if (not set_item is None):
                 self.ui.harddiskListWidget.setCurrentItem(set_item)
+
+    def getMaxFreeSpaceRegion(self, disk):
+        ''' get the biggest free space region ... '''
+        regions = disk.getFreeSpaceRegions()
+        free_max = regions[0]
+        for _range in regions:
+            if (_range.getSize() > free_max.getSize()):
+                free_max = _range
+        print "Max free space region %d-%d (%dMB)" % (free_max.start, free_max.end, free_max.getSize())
+        return free_max
+
+    def getBestFreeSpaceRegion(self, disk, req_size):
+        regions = disk.getFreeSpaceRegions()
+        free_qualified = []
+        for _range in regions:
+            if (_range.getSize() >= req_size):
+                free_qualified.append(_range)
+
+        if len(free_qualified) > 0:
+            best_free = free_qualified[0]
+            for _range in free_qualified:
+                if (_range.getSize() < best_free.getSize()):
+                    best_free = _range
+
+            print "Best free space region %d-%d (%dMB)" % (best_free.start, best_free.end, best_free.getSize())
+            return best_free
+        else:
+            print "There's no suitable free space region"
+            return None
 
     def build_partitions(self):           
         os.popen('mkdir -p /tmp/bbqlinux-installer/tmpmount')

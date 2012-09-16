@@ -41,7 +41,7 @@ class InstallerEngine:
     def get_distribution_version(self):
         return self.distribution_version
         
-    def step_format_partitions(self, setup):        
+    def step_format_partitions(self, setup):
         for partition in setup.partitions:                    
             if(partition.format_as is not None and partition.format_as != ""):                
                 # report it. should grab the total count of filesystems to be formatted ..
