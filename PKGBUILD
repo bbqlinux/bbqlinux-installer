@@ -12,7 +12,6 @@ replaces=('bbqinstaller')
 
 package() {
   cd "$pkgdir"
-
   install -Dm644 "$srcdir/etc/bbqlinux-installer/install.conf" etc/bbqlinux-installer/install.conf
 
   install -Dm755 "$srcdir/usr/bin/bbqlinux-installer" usr/bin/bbqlinux-installer

@@ -6,7 +6,6 @@ import os
 import commands
 import GeoIP
 import gettext
-import pango
 import parted
 import string
 import subprocess
