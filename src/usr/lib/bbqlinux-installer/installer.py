@@ -391,9 +391,9 @@ class InstallerEngine(QtCore.QThread):
             self.update_progress(total=our_total, current=our_current, message="Localizing Firefox")
             our_current += 1
             if setup.locale_code != "en_US":                              
-                num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (country_code, country_code))
+                num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
                 if num_res != "0":                    
-                    self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + country_code)
+                    self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + setup.country_code)
                 else:
                     if "_" in setup.locale_code:
                         language_code = setup.locale_code.split("_")[0]
