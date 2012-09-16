@@ -221,6 +221,7 @@ class InstallerEngine(QtCore.QThread):
             # find the source images..
             if(not os.path.exists(self.root_image)) or (not os.path.exists(self.usrshare_image)):
                 print "One of the base filesystems does not exist! Critical error (exiting)."
+                self.error_message(message="One of the source images doesn't exist! Aborting!", critical=True)
                 self.exit(1)
 
             # format partitions
@@ -465,7 +466,8 @@ class InstallerEngine(QtCore.QThread):
                     self.do_configure_grub(our_total, our_current)
                     grub_retries = grub_retries + 1
                     if grub_retries >= 5:
-                        self.error_message(message="WARNING: The grub bootloader was not configured properly! You need to configure it manually.", critical=True)
+                        self.error_message(message="The bootloader wasn't configured properly! You need to configure it manually.", critical=True)
+                        self.exit(2)
                         break
 
             # now unmount it
@@ -490,6 +492,7 @@ class InstallerEngine(QtCore.QThread):
 
             self.update_progress(total=100, current=100, message="Installation finished")
             print " --> All done"
+            self.emit(QtCore.SIGNAL("installFinished()"))
             self.exit(0)
             
         except Exception:            

@@ -69,6 +69,7 @@ class InstallerWindow(QtGui.QMainWindow):
         self.installer = InstallerEngine(self.setup)
         self.connect(self.installer, QtCore.SIGNAL("progressUpdate(int, int, QString)"), self.update_progress)
         self.connect(self.installer, QtCore.SIGNAL("errorMessage(QString, bool)"), self.error_message)
+        self.connect(self.installer, QtCore.SIGNAL("installFinished()"), self.install_finished)
 
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
@@ -460,7 +461,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
                 # Start the install process
-                self.installer.start()
+                rc = self.installer.start()
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
@@ -1356,6 +1357,9 @@ class InstallerWindow(QtGui.QMainWindow):
             MessageDialog("Critical error", str(message)).show()
         else:
             MessageDialog("Error", str(message)).show()
+    
+    def install_finished(self):
+        self.setCurrentPageIndex(self.PAGE_COMPLETE)
 
 class QuestionDialog(object):
     def __init__(self, title, message):
