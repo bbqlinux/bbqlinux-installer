@@ -99,8 +99,16 @@ class InstallerWindow(QtGui.QMainWindow):
         
     def forwardButton_clicked(self):
         ''' Jump one page forward '''
+        noError = True
         index = self.getCurrentPageIndex()
-        self.setCurrentPageIndex(index + 1)
+
+        if (index == self.PAGE_PARTITION):
+            noError = self.verify_partitions()
+        elif (index == self.PAGE_USER):
+            noError = self.verify_user_settings()
+
+        if (noError == True):
+            self.setCurrentPageIndex(index + 1)
 
     def refreshPartitionButton_clicked(self):
         ''' Refresh the partition view '''
@@ -194,48 +202,70 @@ class InstallerWindow(QtGui.QMainWindow):
     def setOverviewRadioButtons(self, page):
         if (page <= self.PAGE_WELCOME):
             self.ui.welcomeRadioButton.setChecked(True)
+            self.ui.welcomeRadioButton.setEnabled(True)
         else:
             self.ui.welcomeRadioButton.setChecked(False)
+            self.ui.welcomeRadioButton.setEnabled(False)
         if (page is self.PAGE_LANGUAGE):
             self.ui.languageRadioButton.setChecked(True)
+            self.ui.languageRadioButton.setEnabled(True)
         else:
             self.ui.languageRadioButton.setChecked(False)
+            self.ui.languageRadioButton.setEnabled(False)
         if (page is self.PAGE_TIMEZONE):
             self.ui.timezoneRadioButton.setChecked(True)
+            self.ui.timezoneRadioButton.setEnabled(True)
         else:
             self.ui.timezoneRadioButton.setChecked(False)
+            self.ui.timezoneRadioButton.setEnabled(False)
         if (page is self.PAGE_KEYBOARD):
             self.ui.keyboardRadioButton.setChecked(True)
+            self.ui.keyboardRadioButton.setEnabled(True)
         else:
             self.ui.keyboardRadioButton.setChecked(False)
+            self.ui.keyboardRadioButton.setEnabled(False)
         if (page is self.PAGE_HARDDISK):
             self.ui.harddiskRadioButton.setChecked(True)
+            self.ui.harddiskRadioButton.setEnabled(True)
         else:
             self.ui.harddiskRadioButton.setChecked(False)
+            self.ui.harddiskRadioButton.setEnabled(False)
         if (page is self.PAGE_PARTITION):
             self.ui.partitionRadioButton.setChecked(True)
+            self.ui.partitionRadioButton.setEnabled(True)
         else:
             self.ui.partitionRadioButton.setChecked(False)
+            self.ui.partitionRadioButton.setEnabled(False)
         if (page is self.PAGE_ADVANCED):
             self.ui.advancedRadioButton.setChecked(True)
+            self.ui.advancedRadioButton.setEnabled(True)
         else:
             self.ui.advancedRadioButton.setChecked(False)
+            self.ui.advancedRadioButton.setEnabled(False)
         if (page is self.PAGE_USER):
             self.ui.userRadioButton.setChecked(True)
+            self.ui.userRadioButton.setEnabled(True)
         else:
             self.ui.userRadioButton.setChecked(False)
+            self.ui.userRadioButton.setEnabled(False)
         if (page is self.PAGE_SUMMARY):
             self.ui.summaryRadioButton.setChecked(True)
+            self.ui.summaryRadioButton.setEnabled(True)
         else:
             self.ui.summaryRadioButton.setChecked(False)
+            self.ui.summaryRadioButton.setEnabled(False)
         if (page is self.PAGE_INSTALL):
             self.ui.installRadioButton.setChecked(True)
+            self.ui.installRadioButton.setEnabled(True)
         else:
             self.ui.installRadioButton.setChecked(False)
+            self.ui.installRadioButton.setEnabled(False)
         if (page >= self.PAGE_COMPLETE):
             self.ui.completeRadioButton.setChecked(True)
+            self.ui.completeRadioButton.setEnabled(True)
         else:
             self.ui.completeRadioButton.setChecked(False)
+            self.ui.completeRadioButton.setEnabled(False)
     
     def languageListItem_clicked(self, item):
         ''' Get the clicked locale code '''
@@ -368,6 +398,17 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.build_bootloader_list()                
             elif (index is self.PAGE_USER):
                 self.ui.headLabel.setText(unicode("Create your user account"))
+
+                # Username validator
+                rx = QtCore.QRegExp(QtCore.QString("^[a-z][a-z0-9]*$"))
+                self.usernameValidator = QtGui.QRegExpValidator(rx)
+                self.ui.usernameLineEdit.setValidator(self.usernameValidator)
+
+                # Hostname validator
+                rx = QtCore.QRegExp(QtCore.QString("^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"))
+                self.hostnameValidator = QtGui.QRegExpValidator(rx)
+                self.ui.hostnameLineEdit.setValidator(self.hostnameValidator)
+
             elif (index is self.PAGE_SUMMARY):
                 self.ui.headLabel.setText(unicode("Summary"))
             elif (index is self.PAGE_INSTALL):
@@ -1053,6 +1094,46 @@ class InstallerWindow(QtGui.QMainWindow):
             traceback.print_exc(file=sys.stdout)
             print '-'*60
 
+    def verify_partitions(self):
+        # check for /boot/efi on efi systems
+            if(self.setup.bios_type == 'efi'):
+                error_efi = True
+                errorMessage = "Please select a efi (/boot/efi) system partition before proceeding"
+                for partition in self.setup.partitions:
+                    if(partition.mount_as == '/boot/efi'):
+                        error_efi = False                  
+                        if(partition.format_as != "fat32" and partition.format_as != "vfat"):
+                            error_efi = True
+                            errorMessage = "Please indicate a vfat filesystem to format the efi (/boot/efi) system partition before proceeding"
+                        break
+                    else:
+                        error_efi = True
+                        errorMessage = "Please select a efi (/boot/efi) system partition before proceeding"
+                if(error_efi):
+                    MessageDialog("Partitioning error", errorMessage).show()
+            else:
+                error_efi = False
+
+            error_root = True
+            errorMessage = "Please indicate a filesystem to format the root (/) partition before proceeding"
+            for partition in self.setup.partitions:
+                if(partition.mount_as == "/"):
+                    error_root = False
+                    if partition.format_as is None or partition.format_as == "":
+                        error_root = True
+                        errorMessage = "Please indicate a filesystem to format the root (/) partition before proceeding"
+                    break
+                else:
+                    error_root = True
+                    errorMessage = "Please select a root (/) partition before proceeding"
+            if(error_root):
+                MessageDialog("Partitioning error", errorMessage).show()
+
+            if(error_efi == False and error_root == False):
+                return True
+            else:
+                return False
+
     def build_bootloader_list(self):
         self.ui.bootloaderTypeComboBox.clear()
         cur_index = -1
@@ -1099,6 +1180,64 @@ class InstallerWindow(QtGui.QMainWindow):
             if (not set_index is None):
                 self.ui.bootloaderDeviceComboBox.setCurrentIndex(set_index)
         self.setup.print_setup()
+
+    def verify_user_settings(self):
+        pos = 0
+
+        realname_error = True
+        realname = str(self.ui.realnameLineEdit.text())
+        if (len(realname) < 1):
+            realname_error = True
+            self.ui.realnameLineEdit.setStyleSheet("border: 1px solid red")
+            MessageDialog("Realname error", "Please enter a valid realname").show()
+        else:
+            realname_error = False
+            self.ui.realnameLineEdit.setStyleSheet("border: 1px solid green")
+
+        username_error = True
+        username = str(self.ui.usernameLineEdit.text())
+        if (self.usernameValidator.validate(QtCore.QString(username), pos) != (QtGui.QValidator.Acceptable, pos) or len(username) < 1):
+            username_error = True
+            self.ui.usernameLineEdit.setStyleSheet("border: 1px solid red");
+            MessageDialog("Username error", "Please enter a valid username").show()
+        else:
+            username_error = False
+            self.ui.usernameLineEdit.setStyleSheet("border: 1px solid green")
+
+        password1_error = True
+        password1 = str(self.ui.passwordLineEdit1.text())
+        if (len(password1) < 1):
+            password1_error = True
+            self.ui.passwordLineEdit1.setStyleSheet("border: 1px solid red")
+            MessageDialog("Password error", "Please enter a valid password").show()
+        else:
+            password1_error = False
+            self.ui.passwordLineEdit1.setStyleSheet("border: 1px solid green")
+
+        password2_error = True
+        password2 = str(self.ui.passwordLineEdit2.text())
+        if (password2 != password1):
+            password2_error = True
+            self.ui.passwordLineEdit2.setStyleSheet("border: 1px solid red")
+            MessageDialog("Password error", "Passwords do not match").show()
+        else:
+            password2_error = False
+            self.ui.passwordLineEdit2.setStyleSheet("border: 1px solid green")
+
+        hostname_error = True
+        hostname = str(self.ui.hostnameLineEdit.text())
+        if (self.hostnameValidator.validate(QtCore.QString(hostname), pos) != (QtGui.QValidator.Acceptable, pos) or len(hostname) < 1):
+            hostname_error = True
+            self.ui.hostnameLineEdit.setStyleSheet("border: 1px solid red")
+            MessageDialog("Hostname error", "Please enter a valid hostname").show()
+        else:
+            hostname_error = False
+            self.ui.hostnameLineEdit.setStyleSheet("border: 1px solid green")
+        
+        if (realname_error == False and username_error == False and password1_error == False and password2_error == False and hostname_error == False):
+            return True
+        else:
+            return False
 
 class QuestionDialog(object):
     def __init__(self, title, message):
