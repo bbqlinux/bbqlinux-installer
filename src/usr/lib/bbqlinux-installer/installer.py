@@ -5,6 +5,7 @@ import time
 import shutil
 import gettext
 import stat
+import traceback
 import commands
 import sys
 import parted
@@ -320,8 +321,10 @@ class InstallerEngine:
                                         partition_uuid = blkid_mini_element.replace('"', '').strip()
                                         break
                                 break
-                    except Exception, detail:
-                        print detail
+                    except Exception:
+                        print '-'*60
+                        traceback.print_exc(file=sys.stdout)
+                        print '-'*60
                                         
                     fstab.write("# %s\n" % (partition.partition.path))                            
                     
@@ -475,15 +478,15 @@ class InstallerEngine:
                 self.do_unmount("/target")
                 self.do_unmount("/source/rootfs")
                 self.do_unmount("/source/usr/share")
-            except Exception, detail:
-                #best effort, no big deal if we can't umount something
-                print detail 
+            except Exception:
+                print '-'*60
+                traceback.print_exc(file=sys.stdout)
+                print '-'*60
 
             self.update_progress(total=100, current=100, message="Installation finished")
             print " --> All done"
             
         except Exception:            
-            import traceback
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
     
