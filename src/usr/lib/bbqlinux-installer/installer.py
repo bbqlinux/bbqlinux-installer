@@ -10,11 +10,15 @@ import commands
 import sys
 import parted
 from configobj import ConfigObj
+from PyQt4 import QtCore
 
-class InstallerEngine:
+class InstallerEngine(QtCore.QThread):
     ''' This is central to the bbqlinux installer '''
 
-    def __init__(self):
+    def __init__(self, setup, parent = None):
+        QtCore.QThread.__init__(self, parent)
+
+        self.setup = setup
         self.conf_file = '/etc/bbqlinux-installer/install.conf'
         configuration = ConfigObj(self.conf_file)
         self.distribution_name = configuration['distribution']['DISTRIBUTION_NAME']
@@ -25,15 +29,14 @@ class InstallerEngine:
         self.usrshare_image = configuration['install']['LIVE_MEDIA_USRSHARE_IMAGE']
         self.usrshare_image_type = configuration['install']['LIVE_MEDIA_USRSHARE_IMAGE_TYPE']
 
-    def set_progress_hook(self, progresshook):
-        ''' Set a callback to be called on progress updates '''
-        ''' i.e. def my_callback(progress_type, message, current_progress, total) '''
-        ''' Where progress_type is any off PROGRESS_START, PROGRESS_UPDATE, PROGRESS_COMPLETE, PROGRESS_ERROR '''
-        self.update_progress = progresshook
-        
-    def set_error_hook(self, errorhook):
-        ''' Set a callback to be called on errors '''
-        self.error_message = errorhook
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        self.install(self.setup)
+
+    def update_progress(self, total, current, message):
+        self.emit(QtCore.SIGNAL("progressUpdate(int, int, QString)"), total, current, QtCore.QString(message))
 
     def get_distribution_name(self):
         return self.distribution_name
@@ -95,7 +98,7 @@ class InstallerEngine:
                         break
         
         # On efi systems we mount /boot before /boot/efi
-        if(self.bios_type == "efi"):
+        if(self.setup.bios_type == "efi"):
             for partition in setup.partitions:    
                 if(partition.type == "fat16"):
                     partition.type = "msdos"
@@ -215,7 +218,7 @@ class InstallerEngine:
             # find the source images..
             if(not os.path.exists(self.root_image)) or (not os.path.exists(self.usrshare_image)):
                 print "One of the base filesystems does not exist! Critical error (exiting)."
-                sys.exit(1) # change to report
+                self.exit(1)
 
             # format partitions
             self.step_format_partitions(setup)
@@ -437,7 +440,7 @@ class InstallerEngine:
             if(setup.grub_device is not None):
                 self.update_progress(total=our_total, current=our_current, message="Installing bootloader") # PULSE
 
-                if(self.bios_type == "efi"):
+                if(self.setup.bios_type == "efi"):
                     # EFI
                     print " --> Installing grub x86_64-efi"
                     self.do_run_in_chroot("pacman -S --noconfirm --force %s" % self.bootloader_type)
@@ -487,8 +490,9 @@ class InstallerEngine:
             print " --> All done"
             
         except Exception:            
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print '-'*60
+            traceback.print_exc(file=sys.stdout)
+            print '-'*60
     
     def do_run_in_chroot(self, command):
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)

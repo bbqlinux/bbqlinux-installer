@@ -66,8 +66,9 @@ class InstallerWindow(QtGui.QMainWindow):
         self.detect_bios_type()
         
         # Installer engine
-        self.installer = InstallerEngine()
-        
+        self.installer = InstallerEngine(self.setup)
+        self.connect(self.installer, QtCore.SIGNAL("progressUpdate(int, int, QString)"), self.update_progress)
+
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
         
@@ -457,8 +458,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.ui.headLabel.setText(unicode("Installation"))
                 self.ui.forwardButton.setEnabled(False)
                 # Start the install process
-                thr = threading.Thread(name="bbqlinux-install", group=None, args=(), kwargs={}, target=self.do_install)
-                thr.start()
+                self.installer.start()
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
@@ -1342,57 +1342,10 @@ class InstallerWindow(QtGui.QMainWindow):
             except:
                 return False
 
-    def do_install(self):        
-        try:        
-            print " ## INSTALLATION "
-            ''' Actually perform the installation .. '''
-            inst = self.installer            
-
-            if "--debug" in sys.argv:
-                print " ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED"            
-                sys.exit(0)
-                                   
-            inst.set_progress_hook(self.update_progress)
-            inst.set_error_hook(self.error_message)
-
-            # do we dare? ..
-            self.critical_error_happened = False
-            
-            try:
-                inst.install(self.setup)
-            except Exception, detail1:
-                print detail1
-                try:
-                    MessageDialog("Installation error", str(detail)).show()
-                except Exception, detail2:
-                    print detail2
-
-            # show a message dialog thingum
-            while(not self.done):
-                time.sleep(0.1)
-            
-            if self.critical_error_happened:
-                MessageDialog("Installation error", self.critical_error_message).show()              
-            else:
-                # Finsihed
-                self.setCurrentPageIndex(PAGE_COMPLETE)
-            print " ## INSTALLATION COMPLETE "
-            
-        except Exception, detail:
-            print "!!!! General exception"
-            print detail
-            
-        # Quit
-        sys.exit(0)
-
-    def error_message(self, message=""):
-        self.critical_error_happened = True
-        self.critical_error_message = message
-
-    def update_progress(self, total=0, current=0, message=""):
+    def update_progress(self, total=0, current=0, message=QtCore.QString("")):
         self.ui.installProgressBar.setMaximum(total)
         self.ui.installProgressBar.setValue(current)
-        self.ui.installFootLabel.setText(QtCore.QString(message))
+        self.ui.installFootLabel.setText(message)
 
 class QuestionDialog(object):
     def __init__(self, title, message):
@@ -1449,8 +1402,10 @@ class PartitionEditDialog(object):
                         self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(fstype)), 32)
                         if(format_as == fstype):
                             set_index = cur_index
-            except Exception, detail:
-                print detail
+            except Exception:
+                print '-'*60
+                traceback.print_exc(file=sys.stdout)
+                print '-'*60
                 print "Could not build supported filesystems list!"
         
         # If we've found the current fstype, select it
