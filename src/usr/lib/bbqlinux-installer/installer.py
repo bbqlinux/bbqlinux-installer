@@ -38,8 +38,8 @@ class InstallerEngine(QtCore.QThread):
     def update_progress(self, total, current, message):
         self.emit(QtCore.SIGNAL("progressUpdate(int, int, QString)"), total, current, QtCore.QString(message))
 
-    def error_message(self, critical=False, message):
-        self.emit(QtCore.SIGNAL("errorMessage(bool, string)"), critical, message)
+    def error_message(self, message, critical=False):
+        self.emit(QtCore.SIGNAL("errorMessage(QString, bool)"), message, critical)
 
     def get_distribution_name(self):
         return self.distribution_name
@@ -465,7 +465,7 @@ class InstallerEngine(QtCore.QThread):
                     self.do_configure_grub(our_total, our_current)
                     grub_retries = grub_retries + 1
                     if grub_retries >= 5:
-                        self.error_message(critical=True, message="WARNING: The grub bootloader was not configured properly! You need to configure it manually.")
+                        self.error_message(message="WARNING: The grub bootloader was not configured properly! You need to configure it manually.", critical=True)
                         break
 
             # now unmount it

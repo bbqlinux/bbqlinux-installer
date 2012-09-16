@@ -10,4 +10,4 @@ pyrcc4 -o usr/share/bbqlinux-installer/qt_resources_rc.py usr/share/bbqlinux-ins
 sudo cp -R usr /
 sudo cp -R etc /
 
-bbqlinux-installer --debug
+bbqlinux-installer $1
