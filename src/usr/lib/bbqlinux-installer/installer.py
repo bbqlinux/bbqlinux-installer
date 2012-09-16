@@ -439,7 +439,7 @@ class InstallerEngine(QtCore.QThread):
             # install grub
             print " --> Configuring Grub"
             our_current += 1
-            if(setup.grub_device is not None):
+            if(setup.bootloader_device is not None):
                 self.update_progress(total=0, current=0, message="Installing bootloader")
 
                 if(self.setup.bios_type == "efi"):

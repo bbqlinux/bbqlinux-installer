@@ -303,7 +303,7 @@ p, li { white-space: pre-wrap; }
              </font>
             </property>
             <property name="text">
-             <string>Available Harddisks:</string>
+             <string>Available harddisks:</string>
             </property>
            </widget>
           </item>
@@ -315,9 +315,9 @@ p, li { white-space: pre-wrap; }
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>10</y>
+           <y>30</y>
            <width>601</width>
-           <height>261</height>
+           <height>241</height>
           </rect>
          </property>
          <property name="editTriggers">
@@ -437,7 +437,7 @@ p, li { white-space: pre-wrap; }
         <widget class="QWidget" name="horizontalLayoutWidget_7">
          <property name="geometry">
           <rect>
-           <x>340</x>
+           <x>10</x>
            <y>280</y>
            <width>131</width>
            <height>31</height>
@@ -448,6 +448,31 @@ p, li { white-space: pre-wrap; }
            <widget class="QPushButton" name="refreshPartitionButton">
             <property name="text">
              <string>Refresh</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="verticalLayoutWidget_38">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>271</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_38">
+          <item>
+           <widget class="QLabel" name="label_21">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Available partitions:</string>
             </property>
            </widget>
           </item>
@@ -967,6 +992,16 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
          </layout>
+        </widget>
+        <widget class="QGraphicsView" name="graphicsView">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>601</width>
+           <height>211</height>
+          </rect>
+         </property>
         </widget>
        </widget>
        <widget class="QWidget" name="finishPage">
