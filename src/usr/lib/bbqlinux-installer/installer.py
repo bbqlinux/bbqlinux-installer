@@ -445,14 +445,14 @@ class InstallerEngine(QtCore.QThread):
                 if(self.setup.bios_type == "efi"):
                     # EFI
                     print " --> Installing grub x86_64-efi"
-                    self.do_run_in_chroot("pacman -S --noconfirm --force %s" % self.bootloader_type)
+                    self.do_run_in_chroot("pacman -S --noconfirm --force %s" % setup.bootloader_type)
                     if(not os.path.exists("/target%s" % setup.bootloader_device)):
                         os.mkdir("/target%s" % setup.bootloader_device)
                     self.do_run_in_chroot("grub-install --target=x86_64-efi --efi-directory=%s --bootloader-id=BBQLinux --force"  % setup.bootloader_device)
                 else:
                     # BIOS
                     print " --> Installing grub i386-pc "
-                    self.do_run_in_chroot("pacman -S --noconfirm --force %s" % self.bootloader_type)
+                    self.do_run_in_chroot("pacman -S --noconfirm --force %s" % setup.bootloader_type)
                     self.do_run_in_chroot("grub-install --target=i386-pc --force %s" % setup.bootloader_device)
 
                 if(not os.path.exists("/target/boot/grub/locale")):
