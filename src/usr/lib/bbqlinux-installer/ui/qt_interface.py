@@ -457,12 +457,15 @@ class InstallerWindow(QtGui.QMainWindow):
                     self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-no-2.png"))
             elif (index is self.PAGE_INSTALL):
                 self.ui.headLabel.setText(unicode("Installation"))
+                self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
                 # Start the install process
                 self.installer.start()
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
+                self.ui.backButton.setEnabled(False)
+                self.ui.forwardButton.setEnabled(False)
 
             # Set overview radio buttons checked and unchecked
             self.setOverviewRadioButtons(index)

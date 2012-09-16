@@ -909,9 +909,9 @@ p, li { white-space: pre-wrap; }
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>230</y>
+           <y>234</y>
            <width>451</width>
-           <height>31</height>
+           <height>21</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -924,7 +924,7 @@ p, li { white-space: pre-wrap; }
              </font>
             </property>
             <property name="text">
-             <string>Installing Bootloader</string>
+             <string>Progress:</string>
             </property>
            </widget>
           </item>
@@ -934,7 +934,7 @@ p, li { white-space: pre-wrap; }
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>260</y>
+           <y>254</y>
            <width>601</width>
            <height>31</height>
           </rect>
@@ -953,7 +953,7 @@ p, li { white-space: pre-wrap; }
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>290</y>
+           <y>284</y>
            <width>601</width>
            <height>21</height>
           </rect>
@@ -969,7 +969,81 @@ p, li { white-space: pre-wrap; }
          </layout>
         </widget>
        </widget>
-       <widget class="QWidget" name="finishPage"/>
+       <widget class="QWidget" name="finishPage">
+        <widget class="QWidget" name="verticalLayoutWidget_35">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>70</y>
+           <width>601</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_35">
+          <item>
+           <widget class="QLabel" name="label_16">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Congratulations!</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="verticalLayoutWidget_36">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>120</y>
+           <width>601</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_36">
+          <item>
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>You've successfully installed BBQLinux on your machine.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="verticalLayoutWidget_37">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>140</y>
+           <width>601</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_37">
+          <item>
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Please reboot your system now.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
       </widget>
      </item>
     </layout>
