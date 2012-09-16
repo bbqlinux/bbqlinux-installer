@@ -68,6 +68,7 @@ class InstallerWindow(QtGui.QMainWindow):
         # Installer engine
         self.installer = InstallerEngine(self.setup)
         self.connect(self.installer, QtCore.SIGNAL("progressUpdate(int, int, QString)"), self.update_progress)
+        self.connect(self.installer, QtCore.SIGNAL("errorMessage(bool, string)"), self.error_message)
 
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
@@ -1346,6 +1347,12 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.installProgressBar.setMaximum(total)
         self.ui.installProgressBar.setValue(current)
         self.ui.installFootLabel.setText(message)
+
+    def error_message(self, critical=False, message):
+        if (critical == True):
+            MessageDialog("Critical error", message).show()
+        else:
+            MessageDialog("Error", message).show()
 
 class QuestionDialog(object):
     def __init__(self, title, message):

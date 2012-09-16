@@ -38,6 +38,9 @@ class InstallerEngine(QtCore.QThread):
     def update_progress(self, total, current, message):
         self.emit(QtCore.SIGNAL("progressUpdate(int, int, QString)"), total, current, QtCore.QString(message))
 
+    def error_message(self, critical=False, message):
+        self.emit(QtCore.SIGNAL("errorMessage(bool, string)"), critical, message)
+
     def get_distribution_name(self):
         return self.distribution_name
 
@@ -131,7 +134,7 @@ class InstallerEngine(QtCore.QThread):
         print " --> Indexing files"
         for top,dirs,files in os.walk(source, topdown=False):
             our_total += len(dirs) + len(files)
-            self.update_progress(message="Indexing files to be copied..") # PULSE
+            self.update_progress(total=0, current=0, message="Indexing files to be copied..")
         our_total += 1 # safenessness
         print " --> Copying files"
         for top,dirs,files in os.walk(source):
@@ -191,7 +194,7 @@ class InstallerEngine(QtCore.QThread):
         for dirtime in directory_times:
             (directory, atime, mtime) = dirtime
             try:
-                self.update_progress(message="Restoring meta-information on %s" % directory) # PULSE
+                self.update_progress(total=0, current=0, message="Restoring meta-information on %s" % directory)
                 os.utime(directory, (atime, mtime))
             except OSError:
                 pass
@@ -370,11 +373,11 @@ class InstallerEngine(QtCore.QThread):
             print " --> Setting the locale"
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting locale")
-            os.system("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.language)
+            os.system("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.locale_code)
             self.do_run_in_chroot("locale-gen")
             os.system("echo \"\" > /target/etc/default/locale")
-            self.do_run_in_chroot("echo \"LANG=%s.UTF-8\" > /etc/locale.conf" % setup.language)
-            self.do_run_in_chroot("echo \"LC_TIME=%s.UTF-8\" >> /etc/locale.conf" % setup.language)
+            self.do_run_in_chroot("echo \"LANG=%s.UTF-8\" > /etc/locale.conf" % setup.locale_code)
+            self.do_run_in_chroot("echo \"LC_TIME=%s.UTF-8\" >> /etc/locale.conf" % setup.locale_code)
 
             # set the timezone
             print " --> Setting the timezone"
@@ -387,14 +390,13 @@ class InstallerEngine(QtCore.QThread):
             print " --> Localizing Firefox"
             self.update_progress(total=our_total, current=our_current, message="Localizing Firefox")
             our_current += 1
-            if setup.language != "en_US":                
-                locale = setup.language.replace("_", "-").lower()                
-                num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (locale, locale))
+            if setup.locale_code != "en_US":                              
+                num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (country_code, country_code))
                 if num_res != "0":                    
-                    self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + locale)
+                    self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + country_code)
                 else:
-                    if "_" in setup.language:
-                        language_code = setup.language.split("_")[0]
+                    if "_" in setup.locale_code:
+                        language_code = setup.locale_code.split("_")[0]
                         num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (language_code, language_code))
                         if num_res != "0":                            
                             self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + language_code)
@@ -429,8 +431,8 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("mv /etc/slim.conf.new /etc/slim.conf")
 
             # install kernel
-            print " --> Installing the latest and greatest Archlinux kernel"
-            self.update_progress(total=our_total, current=our_current, message="Installing kernel and ramdisk") # PULSE
+            print " --> Installing Archlinux kernel"
+            self.update_progress(total=0, current=0, message="Installing kernel and ramdisk")
             our_current += 1
             self.do_run_in_chroot("pacman -S --noconfirm --force linux")
 
@@ -438,7 +440,7 @@ class InstallerEngine(QtCore.QThread):
             print " --> Configuring Grub"
             our_current += 1
             if(setup.grub_device is not None):
-                self.update_progress(total=our_total, current=our_current, message="Installing bootloader") # PULSE
+                self.update_progress(total=0, current=0, message="Installing bootloader")
 
                 if(self.setup.bios_type == "efi"):
                     # EFI
@@ -463,7 +465,7 @@ class InstallerEngine(QtCore.QThread):
                     self.do_configure_grub(our_total, our_current)
                     grub_retries = grub_retries + 1
                     if grub_retries >= 5:
-                        self.error_message(critical=True, message=_("WARNING: The grub bootloader was not configured properly! You need to configure it manually."))
+                        self.error_message(critical=True, message="WARNING: The grub bootloader was not configured properly! You need to configure it manually.")
                         break
 
             # now unmount it
@@ -488,6 +490,7 @@ class InstallerEngine(QtCore.QThread):
 
             self.update_progress(total=100, current=100, message="Installation finished")
             print " --> All done"
+            self.exit(0)
             
         except Exception:            
             print '-'*60
@@ -498,7 +501,7 @@ class InstallerEngine(QtCore.QThread):
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
         
     def do_configure_grub(self, our_total, our_current):
-        self.update_progress(total=our_total, current=our_current, message="Configuring bootloader") # PULSE
+        self.update_progress(total=0, current=0, message="Configuring bootloader")
         print " --> Running grub-mkconfig"
         self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
         grub_output = commands.getoutput("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
@@ -507,7 +510,7 @@ class InstallerEngine(QtCore.QThread):
         grubfh.close()
         
     def do_check_grub(self, our_total, our_current):
-        self.update_progress(total=our_total, current=our_current, message="Checking bootloader") # PULSE
+        self.update_progress(total=0, current=0, message="Checking bootloader")
         print " --> Checking Grub configuration"
         time.sleep(5)
         found_theme = False
