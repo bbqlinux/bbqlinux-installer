@@ -24,7 +24,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>BBQLinux Installer</string>
+   <string>Installer</string>
   </property>
   <property name="windowIcon">
    <iconset resource="qt_resources.qrc">
@@ -685,7 +685,7 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QLineEdit" name="passwordLineEdit1">
             <property name="inputMethodHints">
-             <set>Qt::ImhNone</set>
+             <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText</set>
             </property>
             <property name="echoMode">
              <enum>QLineEdit::Password</enum>
@@ -916,7 +916,7 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_29">
           <item>
-           <widget class="QLabel" name="label_16">
+           <widget class="QLabel" name="installHeadLabel">
             <property name="font">
              <font>
               <weight>75</weight>
@@ -941,9 +941,9 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_30">
           <item>
-           <widget class="QProgressBar" name="progressBar">
+           <widget class="QProgressBar" name="installProgressBar">
             <property name="value">
-             <number>24</number>
+             <number>0</number>
             </property>
            </widget>
           </item>
@@ -960,7 +960,7 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_31">
           <item>
-           <widget class="QLabel" name="label_17">
+           <widget class="QLabel" name="installFootLabel">
             <property name="text">
              <string>Installing package: grub_x86_64-efi</string>
             </property>
@@ -1124,7 +1124,7 @@ p, li { white-space: pre-wrap; }
         </font>
        </property>
        <property name="text">
-        <string>Welcome to the BBQLinux Installation</string>
+        <string>Welcome to the Installation</string>
        </property>
       </widget>
      </item>

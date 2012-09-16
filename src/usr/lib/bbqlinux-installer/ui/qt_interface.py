@@ -10,6 +10,7 @@ import pango
 import parted
 import string
 import subprocess
+import threading
 import traceback
 import urllib
 import urllib2
@@ -62,6 +63,16 @@ class InstallerWindow(QtGui.QMainWindow):
         
         # Detect and set the bios type (bios, efi)
         self.detect_bios_type()
+        
+        # Installer engine
+        self.installer = InstallerEngine()
+        
+        # Get the distribution name
+        self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
+        
+        # Set window title
+        self.ui.setWindowTitle("%s Installer" % self.DISTRIBUTION_NAME)
+        self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
         
         # Connect the buttons
         self.connect(self.ui.exitButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
@@ -305,6 +316,7 @@ class InstallerWindow(QtGui.QMainWindow):
         
         self.setup.keyboard_model = keyboard_model
         self.setup.keyboard_model_description = keyboard_model_description
+        os.system("setxkbmap -model %s" % keyboard_model)
         self.setup.print_setup()
     
     def keyboardLayoutTableItem_clicked(self, item):
@@ -315,8 +327,12 @@ class InstallerWindow(QtGui.QMainWindow):
         if(len(keyboard_layout) < 1):
             return
 
+        print "keyboard_layout: %s" % keyboard_layout
+        print "keyboard_layout_description: %s" % keyboard_layout_description
+
         self.setup.keyboard_layout = keyboard_layout
         self.setup.keyboard_layout_description = keyboard_layout_description
+        os.system("setxkbmap -layout %s" % keyboard_layout)
         self.build_keyboard_variant_list()
         self.setup.print_setup()
 
@@ -330,6 +346,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
         self.setup.keyboard_variant = keyboard_variant
         self.setup.keyboard_variant_description = keyboard_variant_description
+        os.system("setxkbmap -variant %s" % keyboard_variant)
         self.setup.print_setup()
 
     def harddiskListItem_clicked(self, item):
@@ -378,7 +395,7 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.pageStack.setCurrentIndex(index)
             if (index <= self.PAGE_WELCOME):
                 index = self.PAGE_WELCOME
-                self.ui.headLabel.setText(unicode("Welcome to the BBQLinux Installation"))
+                self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
             elif (index is self.PAGE_LANGUAGE):
                 self.ui.headLabel.setText(unicode("Choose your language"))
                 self.build_language_list()
@@ -438,6 +455,9 @@ class InstallerWindow(QtGui.QMainWindow):
             elif (index is self.PAGE_INSTALL):
                 self.ui.headLabel.setText(unicode("Installation"))
                 self.ui.forwardButton.setEnabled(False)
+                # Start the install process
+                thr = threading.Thread(name="bbqlinux-install", group=None, args=(), kwargs={}, target=self.do_install)
+                thr.start()
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
@@ -605,7 +625,11 @@ class InstallerWindow(QtGui.QMainWindow):
             if("xkb_symbols" in line):
                 # decipher the layout in use
                 section = line.split("\"")[1] # split by the " mark
-                self.setup.keyboard_layout = section.split("+")[1]
+                layout = section.split("+")[1]
+                if "(" in layout:
+                    self.setup.keyboard_layout = layout.split("(")[0]
+                else:
+                    self.setup.keyboard_layout = layout
             if("xkb_geometry" in line):
                 first_bracket = line.index("(") +1
                 substr = line[first_bracket:]
@@ -659,7 +683,7 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.keyboardLayoutTableWidget.verticalHeader().setVisible(False)
             self.ui.keyboardLayoutTableWidget.sortItems(0, 0)
             self.ui.keyboardLayoutTableWidget.insertRow(row)
-            tableItem = QtGui.QTableWidgetItem(QtCore.QString(self.getText(desc.childNodes)))
+            tableItem = QtGui.QTableWidgetItem(QtCore.QString(self.getText(desc.childNodes)))            
             tableItem.setData(32, QtCore.QVariant(QtCore.QString(self.getText(name.childNodes))))
             tableItem.setData(33, QtCore.QVariant(QtCore.QString(self.getText(desc.childNodes))))
             self.ui.keyboardLayoutTableWidget.setItem(row, 0, tableItem)
@@ -688,7 +712,11 @@ class InstallerWindow(QtGui.QMainWindow):
             if("xkb_symbols" in line):
                 # decipher the layout in use
                 section = line.split("\"")[1] # split by the " mark
-                self.setup.keyboard_layout = section.split("+")[1]
+                layout = section.split("+")[1]
+                if "(" in layout:
+                    self.setup.keyboard_layout = layout.split("(")[0]
+                else:
+                    self.setup.keyboard_layout = layout
         p.poll()
 
         xml_file = '/usr/share/X11/xkb/rules/xorg.xml'            
@@ -712,12 +740,12 @@ class InstallerWindow(QtGui.QMainWindow):
                 row += 1           
                 self.ui.keyboardVariantTableWidget.insertRow(row)
                 tableItem = QtGui.QTableWidgetItem(QtCore.QString(layout_description))
-                tableItem.setData(32, QtCore.QVariant(QtCore.QString(layout_name)))
+                tableItem.setData(32, QtCore.QVariant(QtCore.QString("")))
                 tableItem.setData(33, QtCore.QVariant(QtCore.QString(layout_description)))
                 self.ui.keyboardVariantTableWidget.setItem(row, 0, tableItem)
                 tableItem.setSelected(True)
 
-                self.setup.keyboard_variant = layout_name
+                self.setup.keyboard_variant = ""
                 self.setup.keyboard_variant_description = layout_description
 
                 variants_list = layout.getElementsByTagName('variantList')
@@ -732,7 +760,7 @@ class InstallerWindow(QtGui.QMainWindow):
                         self.ui.keyboardVariantTableWidget.insertRow(row)
                         tableItem = QtGui.QTableWidgetItem(QtCore.QString(variant_description))
                         tableItem.setData(32, QtCore.QVariant(QtCore.QString(variant_name)))
-                        tableItem.setData(32, QtCore.QVariant(QtCore.QString(variant_description)))
+                        tableItem.setData(33, QtCore.QVariant(QtCore.QString(variant_description)))
                         self.ui.keyboardVariantTableWidget.setItem(row, 0, tableItem)
                 break
 
@@ -1283,6 +1311,58 @@ class InstallerWindow(QtGui.QMainWindow):
                 return True
             except:
                 return False
+
+    def do_install(self):        
+        try:        
+            print " ## INSTALLATION "
+            ''' Actually perform the installation .. '''
+            inst = self.installer            
+
+            if "--debug" in sys.argv:
+                print " ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED"            
+                sys.exit(0)
+                                   
+            inst.set_progress_hook(self.update_progress)
+            inst.set_error_hook(self.error_message)
+
+            # do we dare? ..
+            self.critical_error_happened = False
+            
+            try:
+                inst.install(self.setup)
+            except Exception, detail1:
+                print detail1
+                try:
+                    MessageDialog("Installation error", str(detail)).show()
+                except Exception, detail2:
+                    print detail2
+
+            # show a message dialog thingum
+            while(not self.done):
+                time.sleep(0.1)
+            
+            if self.critical_error_happened:
+                MessageDialog("Installation error", self.critical_error_message).show()              
+            else:
+                # Finsihed
+                self.setCurrentPageIndex(PAGE_COMPLETE)
+            print " ## INSTALLATION COMPLETE "
+            
+        except Exception, detail:
+            print "!!!! General exception"
+            print detail
+            
+        # Quit
+        sys.exit(0)
+
+    def error_message(self, message=""):
+        self.critical_error_happened = True
+        self.critical_error_message = message
+
+    def update_progress(self, total=0, current=0, message=""):
+        self.ui.installProgressBar.setMaximum(total)
+        self.ui.installProgressBar.setValue(current)
+        self.ui.installFootLabel.setText(QtCore.QString(message))
 
 class QuestionDialog(object):
     def __init__(self, title, message):
