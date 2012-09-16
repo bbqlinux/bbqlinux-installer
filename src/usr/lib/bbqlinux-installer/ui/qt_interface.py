@@ -106,6 +106,8 @@ class InstallerWindow(QtGui.QMainWindow):
             noError = self.verify_partitions()
         elif (index == self.PAGE_USER):
             noError = self.verify_user_settings()
+        elif (index == self.PAGE_SUMMARY):
+            noError = self.check_connectivity()
 
         if (noError == True):
             self.setCurrentPageIndex(index + 1)
@@ -411,8 +413,31 @@ class InstallerWindow(QtGui.QMainWindow):
 
             elif (index is self.PAGE_SUMMARY):
                 self.ui.headLabel.setText(unicode("Summary"))
+
+                summaryText = "Locale: %s\r\n" % self.setup.locale_code
+                summaryText += "Country: %s\r\n" % self.setup.country_code
+                summaryText += "Timezone: %s (%s)\r\n" % (self.setup.timezone, self.setup.timezone_code)        
+                summaryText += "Keyboard: %s - %s (%s) - %s - %s (%s)\r\n" % (self.setup.keyboard_model, self.setup.keyboard_layout, self.setup.keyboard_variant, self.setup.keyboard_model_description, self.setup.keyboard_layout_description, self.setup.keyboard_variant_description)        
+                summaryText += "Username: %s (%s)\r\n" % (self.setup.username, self.setup.real_name)
+                summaryText += "Hostname: %s\r\n" % self.setup.hostname
+                summaryText += "Bios Type: %s\r\n" % self.setup.bios_type
+                summaryText += "Bootloader: %s\r\n" % self.setup.bootloader_type
+                summaryText += "Bootloader device: %s\r\n" % self.setup.bootloader_device
+                summaryText += "Target disk: %s\r\n" % self.setup.target_disk                      
+                summaryText += "Partitions:\r\n"
+                summaryText += "----------------------------------------\r\n"
+                for partition in self.setup.partitions:
+                    summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)              
+                
+                self.ui.summaryTextEdit.setText(summaryText)
+                
+                if (self.check_connectivity() == True):
+                    self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-ok-3.png"))
+                else:
+                    self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-no-2.png"))
             elif (index is self.PAGE_INSTALL):
                 self.ui.headLabel.setText(unicode("Installation"))
+                self.ui.forwardButton.setEnabled(False)
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
@@ -1235,9 +1260,29 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.hostnameLineEdit.setStyleSheet("border: 1px solid green")
         
         if (realname_error == False and username_error == False and password1_error == False and password2_error == False and hostname_error == False):
+            self.setup.real_name = realname
+            self.setup.username = username
+            self.setup.password1 = password1
+            self.setup.password2 = password2
+            self.setup.hostname = hostname
+            self.setup.print_setup()
             return True
         else:
             return False
+
+    def check_connectivity(self):
+        # check for internet connectivity
+        try:
+            con = urllib2.urlopen("http://www.bbqlinux.org")
+            data = con.read()
+            return True
+        except:
+            try:
+                con = urllib2.urlopen("http://www.archlinux.org")
+                data = con.read()
+                return True
+            except:
+                return False
 
 class QuestionDialog(object):
     def __init__(self, title, message):

@@ -683,7 +683,14 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_22">
           <item>
-           <widget class="QLineEdit" name="passwordLineEdit1"/>
+           <widget class="QLineEdit" name="passwordLineEdit1">
+            <property name="inputMethodHints">
+             <set>Qt::ImhNone</set>
+            </property>
+            <property name="echoMode">
+             <enum>QLineEdit::Password</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -698,7 +705,14 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_23">
           <item>
-           <widget class="QLineEdit" name="passwordLineEdit2"/>
+           <widget class="QLineEdit" name="passwordLineEdit2">
+            <property name="inputMethodHints">
+             <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText</set>
+            </property>
+            <property name="echoMode">
+             <enum>QLineEdit::Password</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -772,7 +786,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </widget>
        <widget class="QWidget" name="summaryPage">
-        <widget class="QTextEdit" name="textEdit">
+        <widget class="QTextEdit" name="summaryTextEdit">
          <property name="geometry">
           <rect>
            <x>10</x>
@@ -786,7 +800,10 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Droid Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;blah blah blah&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
         <widget class="QWidget" name="verticalLayoutWidget_26">
@@ -842,15 +859,43 @@ p, li { white-space: pre-wrap; }
         <widget class="QWidget" name="verticalLayoutWidget_28">
          <property name="geometry">
           <rect>
-           <x>10</x>
+           <x>20</x>
            <y>270</y>
-           <width>451</width>
+           <width>31</width>
            <height>31</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_28">
           <item>
-           <widget class="QCheckBox" name="checkBox">
+           <widget class="QLabel" name="connectivityIcon">
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap resource="qt_resources.qrc">:/actions/icons/actions/dialog-no-2.png</pixmap>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="verticalLayoutWidget_34">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>270</y>
+           <width>411</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_34">
+          <item>
+           <widget class="QLabel" name="label_19">
             <property name="text">
              <string>Internet connectivity</string>
             </property>
