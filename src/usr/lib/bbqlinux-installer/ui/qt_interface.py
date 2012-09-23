@@ -399,27 +399,35 @@ class InstallerWindow(QtGui.QMainWindow):
             if (index <= self.PAGE_WELCOME):
                 index = self.PAGE_WELCOME
                 self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png"))
             elif (index is self.PAGE_LANGUAGE):
                 self.ui.headLabel.setText(unicode("Choose your language"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/locales.png"))
                 self.build_language_list()
             elif (index is self.PAGE_TIMEZONE):
                 self.ui.headLabel.setText(unicode("Choose your timezone"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/time.png"))
                 self.build_timezone_list()
             elif (index is self.PAGE_KEYBOARD):
                 self.ui.headLabel.setText(unicode("Choose your keyboard layout"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/keyboard.png"))
                 self.build_keyboard_lists()
             elif (index is self.PAGE_HARDDISK):
                 self.ui.headLabel.setText(unicode("Select Harddisk"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.png"))
                 self.build_harddisks()
             elif (index is self.PAGE_PARTITION):
                 self.ui.headLabel.setText(unicode("Partition your harddisk"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.png"))
                 self.build_partitions()
                 self.build_bootloader_partitions()
             elif (index is self.PAGE_ADVANCED):
                 self.ui.headLabel.setText(unicode("Advanced Settings"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/advanced.png"))
                 self.build_bootloader_list()                
             elif (index is self.PAGE_USER):
                 self.ui.headLabel.setText(unicode("Create your user account"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/user.png"))
 
                 # Username validator
                 rx = QtCore.QRegExp(QtCore.QString("^[a-z][a-z0-9]*$"))
@@ -433,6 +441,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
             elif (index is self.PAGE_SUMMARY):
                 self.ui.headLabel.setText(unicode("Summary"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/summary.png"))
 
                 summaryText = "Locale: %s\r\n" % self.setup.locale_code
                 summaryText += "Country: %s\r\n" % self.setup.country_code
@@ -457,6 +466,7 @@ class InstallerWindow(QtGui.QMainWindow):
                     self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-no-2.png"))
             elif (index is self.PAGE_INSTALL):
                 self.ui.headLabel.setText(unicode("Installation"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/install.png"))
                 self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
                 # Start the install process
@@ -464,6 +474,7 @@ class InstallerWindow(QtGui.QMainWindow):
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
                 self.ui.headLabel.setText(unicode("Finished!"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png"))
                 self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
 
