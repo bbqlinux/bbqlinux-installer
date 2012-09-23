@@ -409,6 +409,20 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("echo \"KEYMAP=%s\" > /etc/vconsole.conf" % setup.keyboard_layout)
             self.do_run_in_chroot("echo \"FONT=\" >> /etc/vconsole.conf")
             self.do_run_in_chroot("echo \"FONT_MAP=\" >> /etc/vconsole.conf")
+            
+            # create xorg config for keyboard
+            keyboardfh = open("/target/etc/X11/xorg.conf.d/90-keyboard-layouts.conf", "w")
+            keyboardfh.write("Section \"InputClass\"\n")
+            keyboardfh.write("  Identifier      \"MainKeyboard\"\n")
+            keyboardfh.write("  MatchIsKeyboard \"on\"\n")
+            keyboardfh.write("  MatchDevicePath \"/dev/input/event*\"\n")
+            keyboardfh.write("  Driver          \"evdev\"\n")
+            keyboardfh.write("  Option          \"XkbModel\"      \"%s\"\n" % setup.keyboard_model)
+            keyboardfh.write("  Option          \"XkbLayout\"     \"%s\"\n" % setup.keyboard_layout)
+            keyboardfh.write("  Option          \"XkbVariant\"    \"%s\"\n" % setup.keyboard_variant)
+            keyboardfh.write("  Option          \"XkbOptions\"    \"\"\n")
+            keyboardfh.write("EndSection\n")
+            keyboardfh.close()
 
             # configure slim
             print " --> Configuring Slim"

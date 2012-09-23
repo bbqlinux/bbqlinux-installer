@@ -1597,6 +1597,41 @@ p, li { white-space: pre-wrap; }
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>timezoneListWidget</tabstop>
+  <tabstop>keyboardModelComboBox</tabstop>
+  <tabstop>keyboardLayoutTableWidget</tabstop>
+  <tabstop>keyboardVariantTableWidget</tabstop>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>backButton</tabstop>
+  <tabstop>forwardButton</tabstop>
+  <tabstop>exitButton</tabstop>
+  <tabstop>realnameLineEdit</tabstop>
+  <tabstop>usernameLineEdit</tabstop>
+  <tabstop>passwordLineEdit1</tabstop>
+  <tabstop>passwordLineEdit2</tabstop>
+  <tabstop>hostnameLineEdit</tabstop>
+  <tabstop>bootloaderDeviceComboBox</tabstop>
+  <tabstop>bootloaderTypeComboBox</tabstop>
+  <tabstop>refreshPartitionButton</tabstop>
+  <tabstop>summaryTextEdit</tabstop>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>editPartitionButton</tabstop>
+  <tabstop>partitionTableWidget</tabstop>
+  <tabstop>harddiskListWidget</tabstop>
+  <tabstop>languageListWidget</tabstop>
+  <tabstop>welcomeRadioButton</tabstop>
+  <tabstop>languageRadioButton</tabstop>
+  <tabstop>timezoneRadioButton</tabstop>
+  <tabstop>keyboardRadioButton</tabstop>
+  <tabstop>harddiskRadioButton</tabstop>
+  <tabstop>partitionRadioButton</tabstop>
+  <tabstop>advancedRadioButton</tabstop>
+  <tabstop>summaryRadioButton</tabstop>
+  <tabstop>installRadioButton</tabstop>
+  <tabstop>userRadioButton</tabstop>
+  <tabstop>completeRadioButton</tabstop>
+ </tabstops>
  <resources>
   <include location="qt_resources.qrc"/>
  </resources>
