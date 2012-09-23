@@ -239,7 +239,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/usr/share/", destination="/target/usr/share/")
 
             # Steps:
-            our_total = 14
+            our_total = 15
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -273,6 +273,12 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.do_run_in_chroot("pacman-key --init")
             self.do_run_in_chroot("pacman-key --populate archlinux")
+
+            # optimize mirrorlist
+            print " --> Optimizing pacman mirrorlist"
+            our_current += 1
+            self.do_run_in_chroot("pacman -S --noconfirm reflector")
+            self.do_run_in_chroot("reflector -l 8 --sort rate --save /etc/pacman.d/mirrorlist")
 
             # remove live configuration packages (or w/e)
             print " --> Removing live configuration (packages)"
