@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="qt_resources.qrc">
-    <normaloff>:/general/logo.svg</normaloff>:/general/logo.svg</iconset>
+    <normaloff>:/general/bbqlinux_icon_blue_16x16.png</normaloff>:/general/bbqlinux_icon_blue_16x16.png</iconset>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">

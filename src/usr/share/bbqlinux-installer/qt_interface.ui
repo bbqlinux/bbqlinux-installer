@@ -28,7 +28,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="qt_resources.qrc">
-    <normaloff>:/general/logo.svg</normaloff>:/general/logo.svg</iconset>
+    <normaloff>:/general/bbqlinux_icon_blue_16x16.png</normaloff>:/general/bbqlinux_icon_blue_16x16.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget_2">
@@ -1198,7 +1198,7 @@ p, li { white-space: pre-wrap; }
         <enum>Qt::AutoText</enum>
        </property>
        <property name="pixmap">
-        <pixmap resource="qt_resources.qrc">:/general/logo.svg</pixmap>
+        <pixmap resource="qt_resources.qrc">:/general/bbqlinux_icon_blue_32x32.png</pixmap>
        </property>
       </widget>
      </item>

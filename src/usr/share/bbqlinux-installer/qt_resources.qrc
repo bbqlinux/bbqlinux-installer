@@ -10,7 +10,10 @@
     <file>icons/user.png</file>
   </qresource>
   <qresource prefix="general">
-    <file>logo.svg</file>
+    <file>bbqlinux_icon_blue_16x16.png</file>
+    <file>bbqlinux_icon_blue_32x32.png</file>
+    <file>bbqlinux_icon_blue_48x48.png</file>
+    <file>bbqlinux_icon_blue_64x64.png</file>
   </qresource>
   <qresource prefix="actions">
     <file>icons/actions/application-exit-2.png</file>

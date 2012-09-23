@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Install BBQLinux
+GenericName=BBQLinux Installer
+Comment=Install BBQLinux to disk
+Exec=/usr/bin/bbqlinux-installer
+Icon=bbqlinux_icon_blue_48x48
+Terminal=False
+Type=Application
+Categories=System;

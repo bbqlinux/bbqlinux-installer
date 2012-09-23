@@ -2,7 +2,7 @@
 
 pkgname=bbqlinux-installer
 pkgver=0.0.4
-pkgrel=1
+pkgrel=3
 pkgdesc="The BBQLinux Installer"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-installer"
@@ -22,10 +22,14 @@ package() {
   install -Dm655 "$srcdir/usr/lib/bbqlinux-installer/ui/__init__.py" usr/lib/bbqlinux-installer/ui/__init__.py
   install -Dm655 "$srcdir/usr/lib/bbqlinux-installer/ui/qt_interface.py" usr/lib/bbqlinux-installer/ui/qt_interface.py
 
+  install -Dm655 "$srcdir/usr/share/bbqlinux-installer/bbqlinux_icon_blue_16x16.png" usr/share/bbqlinux-installer/bbqlinux_icon_blue_16x16.png
+  install -Dm655 "$srcdir/usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png" usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png
+  install -Dm655 "$srcdir/usr/share/bbqlinux-installer/bbqlinux_icon_blue_48x48.png" usr/share/bbqlinux-installer/bbqlinux_icon_blue_48x48.png
+  install -Dm655 "$srcdir/usr/share/bbqlinux-installer/bbqlinux_icon_blue_64x64.png" usr/share/bbqlinux-installer/bbqlinux_icon_blue_64x64.png
+
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/countries" usr/share/bbqlinux-installer/countries
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/languages" usr/share/bbqlinux-installer/languages
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/locales" usr/share/bbqlinux-installer/locales
-  install -Dm655 "$srcdir/usr/share/bbqlinux-installer/logo.svg" usr/share/bbqlinux-installer/logo.svg
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/qt_interface.ui" usr/share/bbqlinux-installer/qt_interface.ui
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/qt_partition_edit_dialog.ui" usr/share/bbqlinux-installer/qt_partition_edit_dialog.ui
   install -Dm655 "$srcdir/usr/share/bbqlinux-installer/qt_resources.qrc" usr/share/bbqlinux-installer/qt_resources.qrc
@@ -34,4 +38,5 @@ package() {
 
   cp -R "$srcdir/usr/share/bbqlinux-installer/flags" usr/share/bbqlinux-installer/flags
   cp -R "$srcdir/usr/share/bbqlinux-installer/icons" usr/share/bbqlinux-installer/icons
+  cp -R "$srcdir/usr/share/icons" usr/share/icons
 }

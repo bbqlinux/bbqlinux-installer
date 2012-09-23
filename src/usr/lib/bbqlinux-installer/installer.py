@@ -280,8 +280,8 @@ class InstallerEngine(QtCore.QThread):
             self.update_progress(total=our_total, current=our_current, message="Removing live configuration (packages)")
             self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-installer")
             
-            if(os.path.exists("/target/etc/skel/Desktop/Live-Installer.desktop")):
-                self.do_run_in_chroot("rm -rf /etc/skel/Desktop/Live-Installer.desktop")
+            if(os.path.exists("/target/etc/skel/Desktop/BBQLinux-Installer.desktop")):
+                self.do_run_in_chroot("rm -rf /etc/skel/Desktop/BBQLinux-Installer.desktop")
 
             if(os.path.exists("/target/usr/share/applications/bbqlinux-installer-launcher.desktop")):
                 self.do_run_in_chroot("rm -rf /usr/share/applications/bbqlinux-installer-launcher.desktop")
