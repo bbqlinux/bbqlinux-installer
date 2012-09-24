@@ -414,11 +414,11 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.build_keyboard_lists()
             elif (index is self.PAGE_HARDDISK):
                 self.ui.headLabel.setText(unicode("Select Harddisk"))
-                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.png"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_harddisks()
             elif (index is self.PAGE_PARTITION):
                 self.ui.headLabel.setText(unicode("Partition your harddisk"))
-                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.png"))
+                self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_partitions()
                 self.build_bootloader_partitions()
             elif (index is self.PAGE_ADVANCED):
