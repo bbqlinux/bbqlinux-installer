@@ -443,7 +443,7 @@ class InstallerEngine(QtCore.QThread):
                 elif(line.startswith("auto_login")):
                     newslimconfig.write("#auto_login          no\n")
                 elif(line.startswith("current_theme")):
-                    newslimconfig.write("current_theme       archlinux-soft-grey\n")
+                    newslimconfig.write("current_theme       bbqlinux-default\n")
                 else:
                     newslimconfig.write("%s\n" % line)
             slimconfig.close()
