@@ -257,6 +257,8 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Removing live configuration (user)")
             self.do_run_in_chroot("userdel -r %s" % live_user)
+            # also remove arch user in case it's present
+            self.do_run_in_chroot("userdel -r arch")
             # can happen
             if(os.path.exists("/target/home/%s" % live_user)):
                 self.do_run_in_chroot("rm -rf /home/%s" % live_user)
