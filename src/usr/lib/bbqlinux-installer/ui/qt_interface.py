@@ -183,7 +183,7 @@ class InstallerWindow(QtGui.QMainWindow):
                     elif action == setEfi:
                         self.assign_mount_point(partitionPathItem, "/boot/efi", "vfat")
                     elif action == setHome:
-                        self.assign_mount_point(partitionPathItem, "/home", "btrfs")
+                        self.assign_mount_point(partitionPathItem, "/home", "None")
                     elif action == setSrv:
                         self.assign_mount_point(partitionPathItem, "/srv", "btrfs")
                     elif action == setUsr:
@@ -1418,6 +1418,9 @@ class PartitionEditDialog(object):
             self.partitionEditBox.filesystemComboBox.setItemData(0, QtCore.QVariant(QtCore.QString("swap")), 32)
         else:
             try:
+                cur_index += 1
+                self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("None"))
+                self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("None")), 32)
                 for item in os.listdir("/sbin"):
                     if(item.startswith("mkfs.")):
                         cur_index += 1

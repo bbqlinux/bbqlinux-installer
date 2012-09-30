@@ -122,6 +122,9 @@ class InstallerEngine(QtCore.QThread):
             if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
                 print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
                 os.system("mkdir -p /target" + partition.mount_as)
+                # If the partition type is unknown, try auto
+                if ((partition.type == "None") or (partition.type == "Unknown")):
+                    partition.type = "auto"
                 self.do_mount(partition.partition.path, "/target" + partition.mount_as, partition.type, None)
 
     def step_copy_files(self, source, destination):
