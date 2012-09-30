@@ -1404,8 +1404,8 @@ class PartitionEditDialog(object):
         if (len(mount_point) > 0):
             self.partitionEditBox.mountpointLineEdit.setText(QtCore.QString(mount_point))
 
-        # Check if real linux path
-        rx = QtCore.QRegExp(QtCore.QString("^/{1}(((/{1}\.{1})?[a-zA-Z0-9 ]+/?)+(\.{1}[a-zA-Z0-9]{2,4})?)$"))
+        # Check for valid linux path
+        rx = QtCore.QRegExp(QtCore.QString("^/(?:[a-zA-Z0-9_\-]+/?)*$"))
         self.validator = QtGui.QRegExpValidator(rx)
         self.partitionEditBox.mountpointLineEdit.setValidator(self.validator)
 
