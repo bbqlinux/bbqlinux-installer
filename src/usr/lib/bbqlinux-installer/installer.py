@@ -296,9 +296,14 @@ class InstallerEngine(QtCore.QThread):
 
             if(os.path.exists("/target/usr/share/applications/bbqlinux-installer-launcher.desktop")):
                 self.do_run_in_chroot("rm -rf /usr/share/applications/bbqlinux-installer-launcher.desktop")
-            
-            if(os.path.exists("/target/etc/rc.local")):
-                self.do_run_in_chroot("rm -rf /etc/rc.local")
+
+            # remove liveuser creation service
+            if(os.path.exists("/target/etc/bbqlinux/create-liveuser")):
+                self.do_run_in_chroot("rm -rf /etc/bbqlinux/create-liveuser")
+            if(os.path.exists("/target/etc/systemd/system/create-liveuser.service")):
+                self.do_run_in_chroot("rm -rf /etc/systemd/system/create-liveuser.service")
+            if(os.path.exists("/target/etc/systemd/system/multi-user.target.wants/create-liveuser.service")):
+                self.do_run_in_chroot("rm -rf /etc/systemd/system/multi-user.target.wants/create-liveuser.service")
 
             if(os.path.exists("/target/etc/skel/.bashrc")):
                 self.do_run_in_chroot("rm -rf /etc/skel/.bashrc")
