@@ -2,12 +2,12 @@
 
 pkgname=bbqlinux-installer
 pkgver=0.0.6
-pkgrel=1
+pkgrel=2
 pkgdesc="The BBQLinux Installer"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-installer"
 license=('GPL')
-depends=('inxi' 'python2' 'qt' 'pyqt' 'parted>=3.0' 'pyparted>=3.8' 'python-geoip')
+depends=('inxi' 'python2' 'qt' 'pyqt' 'parted>=3.0' 'pyparted>=3.8' 'python2-geoip')
 replaces=('bbqinstaller')
 
 package() {
