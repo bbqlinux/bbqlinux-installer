@@ -177,17 +177,17 @@ class InstallerWindow(QtGui.QMainWindow):
                         (mount_as, format_as) = dlg.show()
                         self.assign_mount_point(partitionPathItem, mount_as, format_as)
                     elif action == setRoot:
-                        self.assign_mount_point(partitionPathItem, "/", "btrfs")
+                        self.assign_mount_point(partitionPathItem, "/", "ext4")
                     elif action == setBoot:
-                        self.assign_mount_point(partitionPathItem, "/boot", "btrfs")
+                        self.assign_mount_point(partitionPathItem, "/boot", "ext4")
                     elif action == setEfi:
                         self.assign_mount_point(partitionPathItem, "/boot/efi", "vfat")
                     elif action == setHome:
                         self.assign_mount_point(partitionPathItem, "/home", "None")
                     elif action == setSrv:
-                        self.assign_mount_point(partitionPathItem, "/srv", "btrfs")
+                        self.assign_mount_point(partitionPathItem, "/srv", "ext4")
                     elif action == setUsr:
-                        self.assign_mount_point(partitionPathItem, "/usr", "btrfs")
+                        self.assign_mount_point(partitionPathItem, "/usr", "ext4")
 
     def assign_mount_point(self, partitionPathItem, mount_point, filesystem):
         row = partitionPathItem.row()
