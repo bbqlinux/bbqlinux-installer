@@ -1,0 +1,8 @@
+bbqlinux-installer
+------------------------------------------------------------------------
+
+
+TODO
+------------------------------------------------------------------------
+- Slideshow during installation
+- bugfix: auto-create partitions on a clean disk (mbr) is broken
