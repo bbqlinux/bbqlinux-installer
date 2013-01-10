@@ -268,7 +268,7 @@ class InstallerEngine(QtCore.QThread):
 
             # update package database
             print " --> Updating package database"
-            self.update_progress(total=our_total, current=our_current, message="Configuring Pacman")
+            self.update_progress(total=our_total, current=our_current, message="Configuring Pacman (this can take some minutes)")
             our_current += 1
             os.system("pacman -Sy --noconfirm")
             self.do_run_in_chroot("pacman -Sy --noconfirm")
@@ -463,7 +463,7 @@ class InstallerEngine(QtCore.QThread):
 
             # install kernel
             print " --> Installing Archlinux kernel"
-            self.update_progress(total=0, current=0, message="Installing kernel and ramdisk")
+            self.update_progress(total=0, current=0, message="Installing kernel and ramdisk (this can take some minutes)")
             our_current += 1
             self.do_run_in_chroot("pacman -S --noconfirm --force linux")
 
