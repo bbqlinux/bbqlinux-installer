@@ -312,7 +312,7 @@ class InstallerEngine(QtCore.QThread):
             # add new user
             print " --> Adding new user"
             our_current += 1
-            self.update_progress(total=our_total, current=our_current, message="Adding user to system")         
+            self.update_progress(total=our_total, current=our_current, message="Creating new user")         
             self.do_run_in_chroot("useradd -s %s -c \'%s\' -G audio,games,lp,nopasswdlogin,optical,power,scanner,shutdown,storage,sudo,video -m %s" % ("/bin/bash", setup.real_name, setup.username))
             newusers = open("/target/tmp/newusers.conf", "w")
             newusers.write("%s:%s\n" % (setup.username, setup.password1))
@@ -405,7 +405,7 @@ class InstallerEngine(QtCore.QThread):
 
             # localize Firefox
             print " --> Localizing Firefox"
-            self.update_progress(total=our_total, current=our_current, message="Localizing Firefox")
+            self.update_progress(total=our_total, current=our_current, message="Localizing")
             our_current += 1
             if setup.locale_code != "en_US":                              
                 num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
@@ -421,7 +421,7 @@ class InstallerEngine(QtCore.QThread):
             # set the keyboard options..
             print " --> Setting the keyboard"
             our_current += 1
-            self.update_progress(total=our_total, current=our_current, message="Setting keyboard options")
+            self.update_progress(total=our_total, current=our_current, message="Configuring Keyboard")
             self.do_run_in_chroot("echo \"KEYMAP=%s\" > /etc/vconsole.conf" % setup.keyboard_layout)
             self.do_run_in_chroot("echo \"FONT=\" >> /etc/vconsole.conf")
             self.do_run_in_chroot("echo \"FONT_MAP=\" >> /etc/vconsole.conf")
