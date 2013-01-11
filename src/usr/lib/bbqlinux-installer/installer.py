@@ -26,8 +26,6 @@ class InstallerEngine(QtCore.QThread):
         self.live_user = configuration['install']['LIVE_USER_NAME']
         self.root_image = configuration['install']['LIVE_MEDIA_ROOT_IMAGE']
         self.root_image_type = configuration['install']['LIVE_MEDIA_ROOT_IMAGE_TYPE']
-        self.usrshare_image = configuration['install']['LIVE_MEDIA_USRSHARE_IMAGE']
-        self.usrshare_image_type = configuration['install']['LIVE_MEDIA_USRSHARE_IMAGE_TYPE']
 
     def __del__(self):
         self.wait()
@@ -79,13 +77,9 @@ class InstallerEngine(QtCore.QThread):
     def step_mount_partitions(self, setup):
         # Mount the installation media
         print " --> Mounting partitions"
-        self.update_progress(total=4, current=2, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':self.root_image, 'mountpoint':"/source/rootfs/"})
+        self.update_progress(total=3, current=2, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':self.root_image, 'mountpoint':"/source/rootfs/"})
         print " ------ Mounting %s on %s" % (self.root_image, "/source/rootfs/")
         self.do_mount(self.root_image, "/source/rootfs/", self.root_image_type, options="loop")
-
-        self.update_progress(total=4, current=3, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':self.usrshare_image, 'mountpoint':"/source/usr/share/"})
-        print " ------ Mounting %s on %s" % (self.usrshare_image, "/source/usr/share/")
-        self.do_mount(self.usrshare_image, "/source/usr/share/", self.usrshare_image_type, options="loop")
         
         # Mount the target partition
         for partition in setup.partitions:
@@ -95,7 +89,7 @@ class InstallerEngine(QtCore.QThread):
                 partition.type = "vfat"                
             if(partition.mount_as is not None and partition.mount_as != ""):   
                   if partition.mount_as == "/":
-                        self.update_progress(total=4, current=4, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':partition.partition.path, 'mountpoint':"/target/"})
+                        self.update_progress(total=3, current=3, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':partition.partition.path, 'mountpoint':"/target/"})
                         print " ------ Mounting %s on %s" % (partition.partition.path, "/target/")
                         self.do_mount(partition.partition.path, "/target", partition.type, None)
                         break
@@ -216,15 +210,11 @@ class InstallerEngine(QtCore.QThread):
                 os.mkdir("/source")
             if(not os.path.exists("/source/rootfs")):
                 os.mkdir("/source/rootfs")
-            if(not os.path.exists("/source/usr")):
-                os.mkdir("/source/usr")
-            if(not os.path.exists("/source/usr/share")):
-                os.mkdir("/source/usr/share")
 
             # find the source images..
-            if(not os.path.exists(self.root_image)) or (not os.path.exists(self.usrshare_image)):
-                print "One of the base filesystems does not exist! Critical error (exiting)."
-                self.error_message(message="One of the source images doesn't exist! Aborting!", critical=True)
+            if(not os.path.exists(self.root_image)):
+                print "The base filesystem does not exist! Critical error (exiting)."
+                self.error_message(message="The source image doesn't exist! Aborting!", critical=True)
                 self.exit(1)
 
             # format partitions
@@ -235,11 +225,6 @@ class InstallerEngine(QtCore.QThread):
             
             # copy root image                    
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
-
-            # copy usr/share
-            if(not os.path.exists("/target/usr/share")):
-                os.mkdir("/target/usr/share")
-            self.step_copy_files(source="/source/usr/share/", destination="/target/usr/share/")
 
             # Steps:
             our_total = 15
@@ -514,7 +499,6 @@ class InstallerEngine(QtCore.QThread):
                         self.do_unmount("/target" + partition.mount_as)
                 self.do_unmount("/target")
                 self.do_unmount("/source/rootfs")
-                self.do_unmount("/source/usr/share")
             except Exception:
                 print '-'*60
                 traceback.print_exc(file=sys.stdout)
