@@ -253,7 +253,7 @@ class InstallerEngine(QtCore.QThread):
 
             # update package database
             print " --> Updating package database"
-            self.update_progress(total=our_total, current=our_current, message="Configuring Pacman (this can take some minutes)")
+            self.update_progress(total=0, current=0, message="Configuring Pacman (this can take some minutes)")
             our_current += 1
             os.system("pacman -Sy --noconfirm")
             self.do_run_in_chroot("pacman -Sy --noconfirm")
@@ -390,7 +390,7 @@ class InstallerEngine(QtCore.QThread):
 
             # localize Firefox
             print " --> Localizing Firefox"
-            self.update_progress(total=our_total, current=our_current, message="Localizing")
+            self.update_progress(total=our_total, current=our_current, message="Localizing the system")
             our_current += 1
             if setup.locale_code != "en_US":                              
                 num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
