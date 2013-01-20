@@ -918,7 +918,8 @@ class InstallerWindow(QtGui.QMainWindow):
                                 end = device.endCylinderToSector(cylinder)
                                 geometry = parted.Geometry(device=device, start=start, end=end)
                                 if end < region.length:
-                                    partition = parted.Partition(disk=disk, type=parted.PARTITION_BOOT, geometry=geometry)
+                                    partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, geometry=geometry)
+                                    partition.setFlag(parted.PARTITION_BOOT)
                                     constraint = parted.Constraint(exactGeom=geometry)
                                     disk.addPartition(partition=partition, constraint=constraint)
                                     disk.commit()
