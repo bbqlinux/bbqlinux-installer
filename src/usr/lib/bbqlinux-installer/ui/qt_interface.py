@@ -1048,7 +1048,9 @@ class InstallerWindow(QtGui.QMainWindow):
                                         if os.path.exists(os.path.join(mount_point, 'etc/lsb-release')):
                                             last_added_partition.description = commands.getoutput("cat " + os.path.join(mount_point, 'etc/lsb-release') + " | grep DISTRIB_DESCRIPTION").replace('DISTRIB_DESCRIPTION', '').replace('=', '').replace('"', '').strip()                                    
                                         if os.path.exists(os.path.join(mount_point, 'etc/issue')):
-                                            last_added_partition.description = commands.getoutput("cat " + os.path.join(mount_point, 'etc/issue')).replace('\r', '').replace('\\n', '').replace('\l', '').replace('()', '').strip()                                    
+                                            last_added_partition.description = commands.getoutput("cat " + os.path.join(mount_point, 'etc/issue')).replace('\r', '').replace('\\n', '').replace('\l', '').replace('()', '').strip()
+                                        if os.path.exists(os.path.join(mount_point, 'etc/bbqlinux-version')):
+                                            last_added_partition.description = "BBQLinux"
                                         if os.path.exists(os.path.join(mount_point, 'Windows/servicing/Version')):
                                             version = commands.getoutput("ls %s" % os.path.join(mount_point, 'Windows/servicing/Version'))                                    
                                             if version.startswith("6.1"):
