@@ -484,6 +484,9 @@ class InstallerEngine(QtCore.QThread):
                         self.error_message(message="The bootloader wasn't configured properly! You need to configure it manually.", critical=True)
                         self.exit(2)
                         break
+            
+            # write bbqlinux version
+            self.do_run_in_chroot("echo %s > /etc/bbqlinux-version" % get_distribution_version())
 
             # now unmount it
             print " --> Unmounting partitions"
