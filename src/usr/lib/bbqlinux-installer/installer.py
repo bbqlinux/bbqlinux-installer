@@ -485,7 +485,8 @@ class InstallerEngine(QtCore.QThread):
                         self.exit(2)
                         break
             
-            # write bbqlinux version
+            # set bbqlinux version
+            print " --> Setting BBQLinux version "
             self.do_run_in_chroot("echo %s > /etc/bbqlinux-version" % get_distribution_version())
 
             # now unmount it
