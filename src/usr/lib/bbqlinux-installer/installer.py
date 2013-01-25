@@ -446,6 +446,11 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.do_run_in_chroot("pacman -S --noconfirm --force linux")
 
+            # check if kernel exists
+            if(not os.path.exists("/target/boot/vmlinuz-linux")):
+                self.error_message(message="The kernel wasn't installed properly!", critical=True)
+                self.exit(2)
+
             # install grub
             print " --> Configuring Grub"
             our_current += 1
