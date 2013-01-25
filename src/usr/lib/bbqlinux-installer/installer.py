@@ -47,7 +47,7 @@ class InstallerEngine(QtCore.QThread):
         
     def step_format_partitions(self, setup):
         for partition in setup.partitions:                    
-            if(partition.format_as is not None and partition.format_as != ""):                
+            if(partition.format_as is not None and partition.format_as != "" and partition.format_as != "None"):                
                 # report it. should grab the total count of filesystems to be formatted ..
                 self.update_progress(total=4, current=1, message="Formatting %(partition)s as %(format)s..." % {'partition':partition.partition.path, 'format':partition.format_as})
                 
@@ -227,7 +227,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
 
             # Steps:
-            our_total = 15
+            our_total = 14
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -250,16 +250,10 @@ class InstallerEngine(QtCore.QThread):
             # can happen
             if(os.path.exists("/target/home/%s" % live_user)):
                 self.do_run_in_chroot("rm -rf /home/%s" % live_user)
-
-            # update package database
-            print " --> Updating package database"
-            self.update_progress(total=0, current=0, message="Configuring Pacman (this can take some minutes)")
-            our_current += 1
-            os.system("pacman -Sy --noconfirm")
-            self.do_run_in_chroot("pacman -Sy --noconfirm")
             
             # initialize pacman keyring
             print " --> Initializing pacman keyring"
+            self.update_progress(total=0, current=0, message="Configuring Pacman")
             our_current += 1
             self.do_run_in_chroot("pacman-key --init")
             self.do_run_in_chroot("pacman-key --populate archlinux")
