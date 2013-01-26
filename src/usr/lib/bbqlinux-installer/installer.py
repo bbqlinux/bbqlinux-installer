@@ -269,12 +269,16 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Removing live configuration (packages)")
             self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-installer")
+            self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-livemedia")
             
             if(os.path.exists("/target/etc/skel/Desktop/BBQLinux-Installer.desktop")):
-                self.do_run_in_chroot("rm -rf /etc/skel/Desktop/BBQLinux-Installer.desktop")
+                self.do_run_in_chroot("rm -f /etc/skel/Desktop/BBQLinux-Installer.desktop")
 
             if(os.path.exists("/target/usr/share/applications/bbqlinux-installer-launcher.desktop")):
-                self.do_run_in_chroot("rm -rf /usr/share/applications/bbqlinux-installer-launcher.desktop")
+                self.do_run_in_chroot("rm -f /usr/share/applications/bbqlinux-installer-launcher.desktop")
+
+            if(os.path.exists("/target/etc/skel/.config/autostart/bbqlinux-greeter.desktop")):
+                self.do_run_in_chroot("rm -f /etc/skel/.config/autostart/bbqlinux-greeter.desktop")
 
             # remove liveuser creation service
             if(os.path.exists("/target/etc/bbqlinux/create-liveuser")):
@@ -283,10 +287,6 @@ class InstallerEngine(QtCore.QThread):
                 self.do_run_in_chroot("rm -rf /etc/systemd/system/create-liveuser.service")
             if(os.path.exists("/target/etc/systemd/system/multi-user.target.wants/create-liveuser.service")):
                 self.do_run_in_chroot("rm -rf /etc/systemd/system/multi-user.target.wants/create-liveuser.service")
-
-            if(os.path.exists("/target/etc/skel/.bashrc")):
-                self.do_run_in_chroot("rm -rf /etc/skel/.bashrc")
-            self.do_run_in_chroot("pacman -S --noconfirm --force bash")
 
             # add new user
             print " --> Adding new user"
