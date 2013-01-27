@@ -1,7 +1,7 @@
 # Maintainer: Daniel Hillenbrand <codeworkx@bbqlinux.org>
 
 pkgname=bbqlinux-installer
-pkgver=0.1.2
+pkgver=0.1.3
 pkgrel=1
 pkgdesc="The BBQLinux Installer"
 arch=('any')
@@ -12,10 +12,10 @@ replaces=('bbqinstaller')
 
 package() {
   cd "$pkgdir"
-  install -Dm644 "$srcdir/etc/bbqlinux-installer/install.conf" etc/bbqlinux-installer/install.conf
 
   install -Dm755 "$srcdir/usr/bin/bbqlinux-installer" usr/bin/bbqlinux-installer
 
+  cp -R "$srcdir/etc" etc
   cp -R "$srcdir/usr/lib" usr/lib
   cp -R "$srcdir/usr/share" usr/share
 }
