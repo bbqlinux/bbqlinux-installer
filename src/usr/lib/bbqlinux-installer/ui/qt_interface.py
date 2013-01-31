@@ -848,8 +848,7 @@ class InstallerWindow(QtGui.QMainWindow):
         os.popen('mkdir -p /tmp/bbqlinux-installer/tmpmount')
         
         try:                                                                                            
-            self.setup.partitions = []
-            html_partitions = ""                    
+            self.setup.partitions = []                 
             swap_found = False
             
             if self.setup.target_disk is not None:
@@ -1006,7 +1005,6 @@ class InstallerWindow(QtGui.QMainWindow):
                 partition = disk.getFirstPartition()
                 last_added_partition = PartitionSetup(partition)
                 partition = partition.nextPartition()
-                html_partitions = html_partitions + "<table width='100%'><tr>"
                 row = -1
                 # Clear the table
                 self.ui.partitionTableWidget.clearContents()
@@ -1032,6 +1030,12 @@ class InstallerWindow(QtGui.QMainWindow):
                             # Mount partition if not mounted
                             if (partition.path not in commands.getoutput('mount')):                                
                                 os.system("mount %s /tmp/bbqlinux-installer/tmpmount" % partition.path)
+
+                            # Get filesystem label
+                            blkid_lines = commands.getoutput("blkid %s" % partition.path)
+                            blkid_start = blkid_lines.find('PARTLABEL="') + 11
+                            blkid_end = blkid_lines.find('"', blkid_start)
+                            last_added_partition.label = blkid_lines[blkid_start:blkid_end]
 
                             # Identify partition's description and used space
                             if (partition.path in commands.getoutput('mount')):
@@ -1180,6 +1184,25 @@ class InstallerWindow(QtGui.QMainWindow):
                             tableItem = QtGui.QTableWidgetItem(QtCore.QString("--"))
                             tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_MOUNT_AS, tableItem)
+
+                        # Try to assign partitions
+                        partitionPathItem = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_PATH)
+                        if last_added_partition.label == "EFI System Partition":
+                            last_added_partition.format_as = "vfat"
+                            last_added_partition.mount_as = "/boot/efi"
+                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                        elif last_added_partition.label == "boot":
+                            last_added_partition.format_as = "ext4"
+                            last_added_partition.mount_as = "/boot"
+                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                        elif last_added_partition.label == "root":
+                            last_added_partition.format_as = "ext4"
+                            last_added_partition.mount_as = "/"
+                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                        elif last_added_partition.label == "home":
+                            last_added_partition.format_as = "None"
+                            last_added_partition.mount_as = "/home"
+                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
 
                         # Resize table headers
                         self.ui.partitionTableWidget.resizeColumnsToContents()
