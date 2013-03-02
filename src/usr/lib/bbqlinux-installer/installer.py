@@ -21,8 +21,7 @@ class InstallerEngine(QtCore.QThread):
         self.setup = setup
         self.conf_file = '/etc/bbqlinux-installer/install.conf'
         configuration = ConfigObj(self.conf_file)
-        self.distribution_name = configuration['distribution']['DISTRIBUTION_NAME']
-        self.distribution_version = configuration['distribution']['DISTRIBUTION_VERSION']        
+        self.distribution_name = configuration['distribution']['DISTRIBUTION_NAME']   
         self.live_user = configuration['install']['LIVE_USER_NAME']
         self.root_image = configuration['install']['LIVE_MEDIA_ROOT_IMAGE']
         self.root_image_type = configuration['install']['LIVE_MEDIA_ROOT_IMAGE_TYPE']
@@ -41,9 +40,6 @@ class InstallerEngine(QtCore.QThread):
 
     def get_distribution_name(self):
         return self.distribution_name
-
-    def get_distribution_version(self):
-        return self.distribution_version
         
     def step_format_partitions(self, setup):
         for partition in setup.partitions:                    
@@ -483,10 +479,6 @@ class InstallerEngine(QtCore.QThread):
                         self.error_message(message="The bootloader wasn't configured properly! You need to configure it manually.", critical=True)
                         self.exit(2)
                         break
-            
-            # set bbqlinux version
-            print " --> Setting BBQLinux version "
-            self.do_run_in_chroot("echo %s > /etc/bbqlinux-version" % self.get_distribution_version())
 
             # now unmount it
             print " --> Unmounting partitions"
