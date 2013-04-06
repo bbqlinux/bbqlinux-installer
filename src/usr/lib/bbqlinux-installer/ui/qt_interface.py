@@ -105,6 +105,8 @@ class InstallerWindow(QtGui.QMainWindow):
         # Connect the bootloader combo boxes
         self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
         self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
+        # Connect the webbrowser combo box
+        self.connect(self.ui.webbrowserComboBox, QtCore.SIGNAL("activated(int)"), self.webbrowserComboBox_activated)
 
     def backButton_clicked(self):
         ''' Jump one page back '''
@@ -388,6 +390,19 @@ class InstallerWindow(QtGui.QMainWindow):
         self.setup.bootloader_device = bootloader_device
         self.setup.print_setup()
 
+    def webbrowserComboBox_activated(self, index):
+        ''' Get the clicked webbrowser '''
+        if (index is None):
+            return
+
+        webbrowser = str(self.ui.webbrowserComboBox.itemData(index, 32).toString())
+        
+        if(len(webbrowser) < 1):
+            return
+        
+        self.setup.webbrowser = webbrowser
+        self.setup.print_setup()
+
     def getCurrentPageIndex(self):
         ''' Get the current page index '''
         return self.ui.pageStack.currentIndex()
@@ -421,6 +436,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_partitions()
                 self.build_bootloader_partitions()
+                self.build_webbrowser_list()
             elif (index is self.PAGE_ADVANCED):
                 self.ui.headLabel.setText(unicode("Advanced Settings"))
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/advanced.png"))
@@ -1186,23 +1202,24 @@ class InstallerWindow(QtGui.QMainWindow):
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_MOUNT_AS, tableItem)
 
                         # Try to assign partitions
-                        partitionPathItem = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_PATH)
-                        if last_added_partition.label == "EFI System Partition":
-                            last_added_partition.format_as = "vfat"
-                            last_added_partition.mount_as = "/boot/efi"
-                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
-                        elif last_added_partition.label == "boot":
-                            last_added_partition.format_as = "ext4"
-                            last_added_partition.mount_as = "/boot"
-                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
-                        elif last_added_partition.label == "root":
-                            last_added_partition.format_as = "ext4"
-                            last_added_partition.mount_as = "/"
-                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
-                        elif last_added_partition.label == "home":
-                            last_added_partition.format_as = "None"
-                            last_added_partition.mount_as = "/home"
-                            self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                        if hasattr(last_added_partition, 'label'):
+                            partitionPathItem = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_PATH)
+                            if last_added_partition.label == "EFI System Partition":
+                                last_added_partition.format_as = "vfat"
+                                last_added_partition.mount_as = "/boot/efi"
+                                self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                            elif last_added_partition.label == "boot":
+                                last_added_partition.format_as = "ext4"
+                                last_added_partition.mount_as = "/boot"
+                                self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                            elif last_added_partition.label == "root":
+                                last_added_partition.format_as = "ext4"
+                                last_added_partition.mount_as = "/"
+                                self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
+                            elif last_added_partition.label == "home":
+                                last_added_partition.format_as = "None"
+                                last_added_partition.mount_as = "/home"
+                                self.assign_mount_point(partitionPathItem, last_added_partition.mount_as, last_added_partition.format_as)
 
                         # Resize table headers
                         self.ui.partitionTableWidget.resizeColumnsToContents()
@@ -1303,6 +1320,25 @@ class InstallerWindow(QtGui.QMainWindow):
             # If we found the target disk, select it
             if (not set_index is None):
                 self.ui.bootloaderDeviceComboBox.setCurrentIndex(set_index)
+        self.setup.print_setup()
+
+    def build_webbrowser_list(self):
+        self.ui.webbrowserComboBox.clear()
+        cur_index = -1
+        # list of browsers to choose from
+        browsers = ["firefox","chromium","opera"]
+        
+        for webbrowser in browsers:
+            cur_index += 1
+            self.ui.webbrowserComboBox.addItem(QtCore.QString(webbrowser))
+            self.ui.webbrowserComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(webbrowser)), 32)
+            # 1st browser in array is our default browser
+            if (cur_index == 0):
+                set_index = cur_index
+                self.setup.webbrowser = webbrowser
+        
+        if (not set_index is None):
+            self.ui.webbrowserComboBox.setCurrentIndex(set_index)
         self.setup.print_setup()
 
     def verify_user_settings(self):

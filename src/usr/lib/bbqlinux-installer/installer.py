@@ -378,20 +378,25 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("rm /etc/localtime")
             self.do_run_in_chroot("ln -s /usr/share/zoneinfo/%s /etc/localtime" % setup.timezone)
 
-            # localize Firefox
-            print " --> Localizing Firefox"
-            self.update_progress(total=our_total, current=our_current, message="Localizing the system")
+            # install the webbrowser
+            print " --> Installing webbrowser"
             our_current += 1
-            if setup.locale_code != "en_US":                              
-                num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
-                if num_res != "0":                    
-                    self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + setup.country_code)
-                else:
-                    if "_" in setup.locale_code:
-                        language_code = setup.locale_code.split("_")[0]
-                        num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (language_code, language_code))
-                        if num_res != "0":                            
-                            self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + language_code)
+            self.do_run_in_chroot("pacman -S --noconfirm --force " + setup.webbrowser)
+
+            # localize webbrowser
+            if (setup.webbrowser == "firefox"):
+                print " --> Localizing Firefox Webbrowser"
+                self.update_progress(total=our_total, current=our_current, message="Localizing the system")
+                if setup.locale_code != "en_US":                              
+                    num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
+                    if num_res != "0":                    
+                        self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + setup.country_code)
+                    else:
+                        if "_" in setup.locale_code:
+                            language_code = setup.locale_code.split("_")[0]
+                            num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (language_code, language_code))
+                            if num_res != "0":                            
+                                self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + language_code)
 
             # set the keyboard options..
             print " --> Setting the keyboard"
