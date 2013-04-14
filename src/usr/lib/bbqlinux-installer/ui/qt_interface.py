@@ -190,6 +190,8 @@ class InstallerWindow(QtGui.QMainWindow):
                         self.assign_mount_point(partitionPathItem, "/srv", "ext4")
                     elif action == setUsr:
                         self.assign_mount_point(partitionPathItem, "/usr", "ext4")
+                    else:
+                        print "Invalid action"
 
     def assign_mount_point(self, partitionPathItem, mount_point, filesystem):
         row = partitionPathItem.row()
@@ -211,8 +213,17 @@ class InstallerWindow(QtGui.QMainWindow):
             if (apartition.partition.path == partition_path):
                 apartition.mount_as = mount_point
                 apartition.format_as = filesystem
-            else:                
+            else:
+                # Unset items with same mountpoint
                 if apartition.mount_as == mount_point:
+                    match = self.ui.partitionTableWidget.findItems(QtCore.QString(apartition.partition.path), QtCore.Qt.MatchExactly)
+                    row = self.ui.partitionTableWidget.row(match[0])
+                    item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_MOUNT_AS)
+                    item.setText(QtCore.QString("--"))
+                    item.setData(32, QtCore.QVariant(QtCore.QString("None")))
+                    item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_FORMAT_AS)
+                    item.setText(QtCore.QString("--"))
+                    item.setData(32, QtCore.QVariant(QtCore.QString("None")))
                     apartition.mount_as = None
                     apartition.format_as = None
         self.setup.print_setup()
