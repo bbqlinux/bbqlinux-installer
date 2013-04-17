@@ -216,14 +216,15 @@ class InstallerWindow(QtGui.QMainWindow):
             else:
                 # Unset items with same mountpoint
                 if apartition.mount_as == mount_point:
-                    match = self.ui.partitionTableWidget.findItems(QtCore.QString(apartition.partition.path), QtCore.Qt.MatchExactly)
-                    row = self.ui.partitionTableWidget.row(match[0])
-                    item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_MOUNT_AS)
-                    item.setText(QtCore.QString("--"))
-                    item.setData(32, QtCore.QVariant(QtCore.QString("None")))
-                    item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_FORMAT_AS)
-                    item.setText(QtCore.QString("--"))
-                    item.setData(32, QtCore.QVariant(QtCore.QString("None")))
+                    match = self.ui.partitionTableWidget.findItems(QtCore.QString(apartition.partition.path), QtCore.Qt.MatchEndsWith)
+                    if len (match) != 0:
+                        row = self.ui.partitionTableWidget.row(match[0])
+                        item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_MOUNT_AS)
+                        item.setText(QtCore.QString("--"))
+                        item.setData(32, QtCore.QVariant(QtCore.QString("None")))
+                        item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_FORMAT_AS)
+                        item.setText(QtCore.QString("--"))
+                        item.setData(32, QtCore.QVariant(QtCore.QString("None")))
                     apartition.mount_as = None
                     apartition.format_as = None
         self.setup.print_setup()
@@ -1134,7 +1135,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
                         # Display name
                         tableItem = QtGui.QTableWidgetItem(QtCore.QString(display_name))
-                        tableItem.setData(32, QtCore.QVariant(QtCore.QString(display_name)))
+                        tableItem.setData(32, QtCore.QVariant(QtCore.QString(last_added_partition.partition.path)))
                         self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_PATH, tableItem)
 
                         # Size
