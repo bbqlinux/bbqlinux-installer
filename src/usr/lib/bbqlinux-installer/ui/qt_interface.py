@@ -1092,8 +1092,10 @@ class InstallerWindow(QtGui.QMainWindow):
                                         if os.path.exists(os.path.join(mount_point, 'etc/bbqlinux-version')):
                                             last_added_partition.description = "BBQLinux"
                                         if os.path.exists(os.path.join(mount_point, 'Windows/servicing/Version')):
-                                            version = commands.getoutput("ls %s" % os.path.join(mount_point, 'Windows/servicing/Version'))                                    
-                                            if version.startswith("6.1"):
+                                            version = commands.getoutput("ls %s" % os.path.join(mount_point, 'Windows/servicing/Version'))
+                                            if version.startswith("6.2"):
+                                                last_added_partition.description = "Windows 8"
+                                            elif version.startswith("6.1"):
                                                 last_added_partition.description = "Windows 7"
                                             elif version.startswith("6.0"):
                                                 last_added_partition.description = "Windows Vista"
@@ -1110,10 +1112,12 @@ class InstallerWindow(QtGui.QMainWindow):
                                             elif version.startswith("4.0.950"):
                                                 last_added_partition.description = "Windows 95"
                                         elif os.path.exists(os.path.join(mount_point, 'Boot/BCD')):
-                                            if os.system("grep -qs \"V.i.s.t.a\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
-                                                last_added_partition.description = "Windows Vista bootloader"
+                                            if os.system("grep -qs \"W.i.n.d.o.w.s. .8\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
+                                                last_added_partition.description = "Windows 8 bootloader"
                                             elif os.system("grep -qs \"W.i.n.d.o.w.s. .7\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
                                                 last_added_partition.description = "Windows 7 bootloader"
+                                            elif os.system("grep -qs \"V.i.s.t.a\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
+                                                last_added_partition.description = "Windows Vista bootloader"
                                             elif os.system("grep -qs \"W.i.n.d.o.w.s. .R.e.c.o.v.e.r.y. .E.n.v.i.r.o.n.m.e.n.t\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
                                                 last_added_partition.description = "Windows recovery"
                                             elif os.system("grep -qs \"W.i.n.d.o.w.s. .S.e.r.v.e.r. .2.0.0.8\" " + os.path.join(mount_point, 'Boot/BCD')) == 0:
