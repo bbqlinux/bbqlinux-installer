@@ -1060,10 +1060,18 @@ class InstallerWindow(QtGui.QMainWindow):
                                 os.system("mount %s /tmp/bbqlinux-installer/tmpmount" % partition.path)
 
                             # Get filesystem label
+                            blkid_start = 0
                             blkid_lines = commands.getoutput("blkid %s" % partition.path)
-                            blkid_start = blkid_lines.find('PARTLABEL="') + 11
-                            blkid_end = blkid_lines.find('"', blkid_start)
-                            last_added_partition.label = blkid_lines[blkid_start:blkid_end]
+                            if "PARTLABEL=" in blkid_lines:
+                                blkid_start = blkid_lines.find('PARTLABEL="') + 11
+                            elif "LABEL=" in blkid_lines:
+                                blkid_start = blkid_lines.find('LABEL="') + 7
+
+                            if blkid_start != 0:
+                                blkid_end = blkid_lines.find('"', blkid_start)
+                                last_added_partition.label = blkid_lines[blkid_start:blkid_end]
+                            else:
+                                last_added_partition.label = "undefined"
 
                             # Identify partition's description and used space
                             if (partition.path in commands.getoutput('mount')):
