@@ -429,9 +429,9 @@ class InstallerEngine(QtCore.QThread):
             for line in lightdmconfig:
                 line = line.rstrip("\r\n")
                 if(line.startswith("greeter-session=")):
-                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter")
+                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter\n")
                 elif(line.startswith("#greeter-session=")):
-                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter")
+                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter\n")
                 else:
                     newlightdmconfig.write("%s\n" % line)
             lightdmconfig.close()
@@ -537,7 +537,7 @@ class InstallerEngine(QtCore.QThread):
                 if("bbqlinux.png" in line):
                     found_theme = True
                     print " --> Found Grub theme: %s " % line
-                if ("menuentry" in line and "Arch GNU/Linux" in line):
+                if ("menuentry" in line and "Arch Linux" in line):
                     found_entry = True
                     print " --> Found Grub entry: %s " % line
             grubfh.close()
