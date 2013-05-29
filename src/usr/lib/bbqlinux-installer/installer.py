@@ -420,26 +420,24 @@ class InstallerEngine(QtCore.QThread):
             keyboardfh.write("EndSection\n")
             keyboardfh.close()
 
-            # configure slim
-            print " --> Configuring Slim"
-            self.update_progress(total=our_total, current=our_current, message="Configuring Slim")
+            # configure lightdm
+            print " --> Configuring LightDM"
+            self.update_progress(total=our_total, current=our_current, message="Configuring LightDM")
             our_current += 1
-            slimconfig = open("/target/etc/slim.conf", "r")
-            newslimconfig = open("/target/etc/slim.conf.new", "w")
-            for line in slimconfig:
+            lightdmconfig = open("/target/etc/lightdm/lightdm.conf", "r")
+            newlightdmconfig = open("/target/etc/lightdm/lightdm.conf.new", "w")
+            for line in lightdmconfig:
                 line = line.rstrip("\r\n")
-                if(line.startswith("default_user")):
-                    newslimconfig.write("default_user       %s\n" % setup.username)
-                elif(line.startswith("auto_login")):
-                    newslimconfig.write("#auto_login          no\n")
-                elif(line.startswith("current_theme")):
-                    newslimconfig.write("current_theme       bbqlinux-default\n")
+                if(line.startswith("greeter-session=")):
+                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter")
+                elif(line.startswith("#greeter-session=")):
+                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter")
                 else:
-                    newslimconfig.write("%s\n" % line)
-            slimconfig.close()
-            newslimconfig.close()
-            self.do_run_in_chroot("rm /etc/slim.conf")
-            self.do_run_in_chroot("mv /etc/slim.conf.new /etc/slim.conf")
+                    newlightdmconfig.write("%s\n" % line)
+            lightdmconfig.close()
+            newlightdmconfig.close()
+            self.do_run_in_chroot("rm /etc/lightdm/lightdm.conf")
+            self.do_run_in_chroot("mv /etc/lightdm/lightdm.conf.new /etc/lightdm/lightdm.conf")
 
             # install kernel
             print " --> Installing Archlinux kernel"
