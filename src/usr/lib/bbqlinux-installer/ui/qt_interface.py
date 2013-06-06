@@ -1507,7 +1507,7 @@ class PartitionEditDialog(object):
                 cur_index += 1
                 self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("None"))
                 self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("None")), 32)
-                for item in os.listdir("/sbin"):
+                for item in os.listdir("/usr/bin"):
                     if(item.startswith("mkfs.")):
                         cur_index += 1
                         fstype = item.split(".")[1]
