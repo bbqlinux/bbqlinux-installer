@@ -105,8 +105,12 @@ class InstallerWindow(QtGui.QMainWindow):
         # Connect the bootloader combo boxes
         self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
         self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
+
         # Connect the webbrowser combo box
         self.connect(self.ui.webbrowserComboBox, QtCore.SIGNAL("activated(int)"), self.webbrowserComboBox_activated)
+
+        # Connect the office suite combo box
+        self.connect(self.ui.officeSuiteComboBox, QtCore.SIGNAL("activated(int)"), self.officeSuiteComboBox_activated)
 
     def backButton_clicked(self):
         ''' Jump one page back '''
@@ -415,6 +419,19 @@ class InstallerWindow(QtGui.QMainWindow):
         self.setup.webbrowser = webbrowser
         self.setup.print_setup()
 
+    def officeSuiteComboBox_activated(self, index):
+        ''' Get the clicked office suite '''
+        if (index is None):
+            return
+
+        officeSuite = str(self.ui.officeSuiteComboBox.itemData(index, 32).toString())
+        
+        if(len(officeSuite) < 1):
+            return
+        
+        self.setup.officeSuite = officeSuite
+        self.setup.print_setup()
+
     def getCurrentPageIndex(self):
         ''' Get the current page index '''
         return self.ui.pageStack.currentIndex()
@@ -449,6 +466,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.build_partitions()
                 self.build_bootloader_partitions()
                 self.build_webbrowser_list()
+                self.build_officeSuite_list()
             elif (index is self.PAGE_ADVANCED):
                 self.ui.headLabel.setText(unicode("Advanced Settings"))
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/advanced.png"))
@@ -484,7 +502,11 @@ class InstallerWindow(QtGui.QMainWindow):
                 summaryText += "Partitions:\r\n"
                 summaryText += "----------------------------------------\r\n"
                 for partition in self.setup.partitions:
-                    summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)              
+                    summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)
+                summaryText += "----------------------------------------\r\n"
+                summaryText += "Webbrowser: %s\r\n" % self.setup.webbrowser
+                summaryText += "Office Suite: %s\r\n" % self.setup.officeSuite
+                summaryText += "----------------------------------------\r\n"
                 
                 self.ui.summaryTextEdit.setText(summaryText)
                 
@@ -1363,6 +1385,25 @@ class InstallerWindow(QtGui.QMainWindow):
         
         if (not set_index is None):
             self.ui.webbrowserComboBox.setCurrentIndex(set_index)
+        self.setup.print_setup()
+
+    def build_officeSuite_list(self):
+        self.ui.officeSuiteComboBox.clear()
+        cur_index = -1
+        # list of office suites to choose from
+        officeSuites = ["none","calligra","libreoffice"]
+        
+        for officeSuite in officeSuites:
+            cur_index += 1
+            self.ui.officeSuiteComboBox.addItem(QtCore.QString(officeSuite))
+            self.ui.officeSuiteComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(officeSuite)), 32)
+            # 1st office suite in array is our default one
+            if (cur_index == 0):
+                set_index = cur_index
+                self.setup.officeSuite = officeSuite
+        
+        if (not set_index is None):
+            self.ui.officeSuiteComboBox.setCurrentIndex(set_index)
         self.setup.print_setup()
 
     def verify_user_settings(self):
