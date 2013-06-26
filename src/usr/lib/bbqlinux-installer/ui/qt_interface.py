@@ -334,7 +334,9 @@ class InstallerWindow(QtGui.QMainWindow):
         
         if(len(keyboard_model) < 1):
             return
-        
+
+        print "keyboard_model: %s" % keyboard_model
+
         self.setup.keyboard_model = keyboard_model
         self.setup.keyboard_model_description = keyboard_model_description
         os.system("setxkbmap -model %s" % keyboard_model)
@@ -353,7 +355,9 @@ class InstallerWindow(QtGui.QMainWindow):
 
         self.setup.keyboard_layout = keyboard_layout
         self.setup.keyboard_layout_description = keyboard_layout_description
-        os.system("setxkbmap -layout %s" % keyboard_layout)
+        os.system("setxkbmap -layout %s" % keyboard_layout) # might be removed in future
+        os.system("localectl set-keymap %s" % keyboard_layout)
+        os.system("localectl set-x11-keymap %s" % keyboard_layout)
         self.build_keyboard_variant_list()
         self.setup.print_setup()
 
@@ -364,6 +368,8 @@ class InstallerWindow(QtGui.QMainWindow):
 
         if(len(keyboard_variant) < 1):
             return
+
+        print "keyboard_variant: %s" % keyboard_variant
 
         self.setup.keyboard_variant = keyboard_variant
         self.setup.keyboard_variant_description = keyboard_variant_description
@@ -1324,10 +1330,11 @@ class InstallerWindow(QtGui.QMainWindow):
     def build_bootloader_list(self):
         self.ui.bootloaderTypeComboBox.clear()
         cur_index = -1
-        if (self.setup.bios_type == "efi"):
-            bootloader_type = "grub-efi-x86_64"
-        else:
-            bootloader_type = "grub-bios"
+        #if (self.setup.bios_type == "efi"):
+        #    bootloader_type = "grub-efi-x86_64"
+        #else:
+        #    bootloader_type = "grub-bios"
+        bootloader_type = "grub"
         cur_index += 1
         self.ui.bootloaderTypeComboBox.addItem(QtCore.QString(bootloader_type))
         self.ui.bootloaderTypeComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(bootloader_type)), 32)
