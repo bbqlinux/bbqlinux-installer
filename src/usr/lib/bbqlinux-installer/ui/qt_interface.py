@@ -72,7 +72,10 @@ class InstallerWindow(QtGui.QMainWindow):
 
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
-        
+
+        # Check if we're connected to the interwebz
+        self.setup.internet_connectivity = self.check_connectivity()
+
         # Set window title
         self.ui.setWindowTitle("%s Installer" % self.DISTRIBUTION_NAME)
         self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
@@ -126,8 +129,8 @@ class InstallerWindow(QtGui.QMainWindow):
             noError = self.verify_partitions()
         elif (index == self.PAGE_USER):
             noError = self.verify_user_settings()
-        elif (index == self.PAGE_SUMMARY):
-            noError = self.check_connectivity()
+        #elif (index == self.PAGE_SUMMARY):
+            #noError = self.setup.internet_connectivity
 
         if (noError == True):
             self.setCurrentPageIndex(index + 1)
@@ -516,7 +519,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 
                 self.ui.summaryTextEdit.setText(summaryText)
                 
-                if (self.check_connectivity() == True):
+                if (self.setup.internet_connectivity == True):
                     self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-ok-3.png"))
                 else:
                     self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-no-2.png"))
@@ -1379,7 +1382,10 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.webbrowserComboBox.clear()
         cur_index = -1
         # list of browsers to choose from
-        browsers = ["firefox","chromium","opera"]
+        if (self.setup.internet_connectivity == True):
+            browsers = ["none","firefox","chromium","opera"]
+        else:
+            browsers = ["none"]
         
         for webbrowser in browsers:
             cur_index += 1
@@ -1398,7 +1404,10 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.officeSuiteComboBox.clear()
         cur_index = -1
         # list of office suites to choose from
-        officeSuites = ["none","calligra","libreoffice"]
+        if (self.setup.internet_connectivity == True):
+            officeSuites = ["none","calligra","libreoffice"]
+        else:
+            officeSuites = ["none"]
         
         for officeSuite in officeSuites:
             cur_index += 1

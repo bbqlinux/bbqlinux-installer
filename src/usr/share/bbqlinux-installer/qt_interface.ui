@@ -1002,7 +1002,7 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QLabel" name="label_19">
             <property name="text">
-             <string>Internet connectivity</string>
+             <string>Internet connectivity (recommended)</string>
             </property>
            </widget>
           </item>
