@@ -21,7 +21,8 @@ class InstallerEngine(QtCore.QThread):
         self.setup = setup
         self.conf_file = '/etc/bbqlinux-installer/install.conf'
         configuration = ConfigObj(self.conf_file)
-        self.distribution_name = configuration['distribution']['DISTRIBUTION_NAME']   
+        self.distribution_name = configuration['distribution']['DISTRIBUTION_NAME']
+        self.installer_version = configuration['distribution']['INSTALLER_VERSION']   
         self.live_user = configuration['install']['LIVE_USER_NAME']
         self.root_image = configuration['install']['LIVE_MEDIA_ROOT_IMAGE']
         self.root_image_type = configuration['install']['LIVE_MEDIA_ROOT_IMAGE_TYPE']
@@ -40,7 +41,10 @@ class InstallerEngine(QtCore.QThread):
 
     def get_distribution_name(self):
         return self.distribution_name
-        
+
+    def get_installer_version(self):
+        return self.installer_version
+
     def step_format_partitions(self, setup):
         for partition in setup.partitions:                    
             if(partition.format_as is not None and partition.format_as != "" and partition.format_as != "None"):                

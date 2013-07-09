@@ -73,11 +73,14 @@ class InstallerWindow(QtGui.QMainWindow):
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
 
+        # Get the installer version
+        self.INSTALLER_VERSION = self.installer.get_installer_version()
+
         # Check if we're connected to the interwebz
         self.setup.internet_connectivity = self.check_connectivity()
 
         # Set window title
-        self.ui.setWindowTitle("%s Installer" % self.DISTRIBUTION_NAME)
+        self.ui.setWindowTitle("%s Installer - v%s" % (self.DISTRIBUTION_NAME, self.INSTALLER_VERSION))
         self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
         
         # Connect the buttons
