@@ -256,7 +256,7 @@ class InstallerEngine(QtCore.QThread):
 
             # optimize mirrorlist
             our_current += 1
-            if (self.internet_connectivity == True):
+            if (setup.internet_connectivity == True):
                 print " --> Optimizing pacman mirrorlist"
                 self.update_progress(total=our_total, current=our_current, message="Optimizing pacman mirrorlist")
                 self.do_run_in_chroot("pacman -S --noconfirm reflector")
@@ -385,7 +385,7 @@ class InstallerEngine(QtCore.QThread):
 
             # install the webbrowser
             our_current += 1
-            if (self.internet_connectivity == True):
+            if (setup.internet_connectivity == True):
                 if (setup.webbrowser != "none" and setup.webbrowser != None):
                     print " --> Installing webbrowser"
                     self.update_progress(total=our_total, current=our_current, message="Installing webbrowser")
@@ -411,7 +411,7 @@ class InstallerEngine(QtCore.QThread):
             # install the office suite
             our_current += 1
             if (setup.officeSuite != "none" and setup.officeSuite != None):
-                if (self.internet_connectivity == True):
+                if (setup.internet_connectivity == True):
                     print " --> Installing office suite"
                     self.update_progress(total=our_total, current=our_current, message="Installing office suite")
                     self.do_run_in_chroot("pacman -S --noconfirm --force " + setup.officeSuite)

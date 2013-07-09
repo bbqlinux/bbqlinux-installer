@@ -129,8 +129,6 @@ class InstallerWindow(QtGui.QMainWindow):
             noError = self.verify_partitions()
         elif (index == self.PAGE_USER):
             noError = self.verify_user_settings()
-        #elif (index == self.PAGE_SUMMARY):
-            #noError = self.setup.internet_connectivity
 
         if (noError == True):
             self.setCurrentPageIndex(index + 1)
