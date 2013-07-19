@@ -227,7 +227,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
 
             # Steps:
-            our_total = 15
+            our_total = 13
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -386,70 +386,6 @@ class InstallerEngine(QtCore.QThread):
             os.system("echo \"%s\" > /target/etc/timezone" % setup.timezone_code)
             self.do_run_in_chroot("rm /etc/localtime")
             self.do_run_in_chroot("ln -s /usr/share/zoneinfo/%s /etc/localtime" % setup.timezone)
-
-            # install the webbrowser
-            our_current += 1
-            if (setup.internet_connectivity == True):
-                if (setup.webbrowser != "none" and setup.webbrowser != None):
-                    print " --> Installing webbrowser"
-                    self.update_progress(total=our_total, current=our_current, message="Installing webbrowser")
-                    self.do_run_in_chroot("pacman -S --noconfirm --force " + setup.webbrowser)
-
-                    # localize webbrowser
-                    if (setup.webbrowser == "firefox"):
-                        print " --> Localizing Firefox Webbrowser"
-                        self.update_progress(total=our_total, current=our_current, message="Localizing Firefox")
-                        if setup.locale_code != "en_US":                              
-                            num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (setup.country_code, setup.country_code))
-                            if num_res != "0":                    
-                                self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + setup.country_code)
-                            else:
-                                if "_" in setup.locale_code:
-                                    language_code = setup.locale_code.split("_")[0]
-                                    num_res = commands.getoutput("pacman -Ss firefox-i18n-%s | grep firefox-i18n-%s | wc -l" % (language_code, language_code))
-                                    if num_res != "0":                            
-                                        self.do_run_in_chroot("pacman -S --noconfirm --force firefox-i18n-" + language_code)
-            else:
-                self.update_progress(total=our_total, current=our_current, message="Skip installing webbrowser")
-
-            # install the office suite
-            our_current += 1
-            if (setup.officeSuite != "none" and setup.officeSuite != None):
-                if (setup.internet_connectivity == True):
-                    print " --> Installing office suite"
-                    self.update_progress(total=our_total, current=our_current, message="Installing office suite")
-                    self.do_run_in_chroot("pacman -S --noconfirm --force " + setup.officeSuite)
-
-                    # localize calligra office
-                    if (setup.officeSuite == "calligra"):
-                        print " --> Localizing Calligra Office"
-                        self.update_progress(total=our_total, current=our_current, message="Localizing Calligra Office")
-                        if setup.locale_code != "en_US":                              
-                            num_res = commands.getoutput("pacman -Ss calligra-l10n-%s | grep calligra-l10n-%s | wc -l" % (setup.country_code, setup.country_code))
-                            if num_res != "0":                    
-                                self.do_run_in_chroot("pacman -S --noconfirm --force calligra-l10n-" + setup.country_code)
-                            else:
-                                if "_" in setup.locale_code:
-                                    language_code = setup.locale_code.split("_")[0]
-                                    num_res = commands.getoutput("pacman -Ss calligra-l10n-%s | grep calligra-l10n-%s | wc -l" % (language_code, language_code))
-                                    if num_res != "0":                            
-                                        self.do_run_in_chroot("pacman -S --noconfirm --force calligra-l10n-" + language_code)
-                    # localize libreoffice
-                    elif (setup.officeSuite == "libreoffice"):
-                        print " --> Localizing LibreOffice"
-                        self.update_progress(total=our_total, current=our_current, message="Localizing LibreOffice")
-                        if setup.locale_code != "en_US":                              
-                            num_res = commands.getoutput("pacman -Ss libreoffice-%s | grep libreoffice-%s | wc -l" % (setup.country_code, setup.country_code))
-                            if num_res != "0":                    
-                                self.do_run_in_chroot("pacman -S --noconfirm --force libreoffice-" + setup.country_code)
-                            else:
-                                if "_" in setup.locale_code:
-                                    language_code = setup.locale_code.split("_")[0]
-                                    num_res = commands.getoutput("pacman -Ss libreoffice-%s | grep libreoffice-%s | wc -l" % (language_code, language_code))
-                                    if num_res != "0":                            
-                                        self.do_run_in_chroot("pacman -S --noconfirm --force libreoffice-" + language_code)
-                else:
-                    self.update_progress(total=our_total, current=our_current, message="Skip installing office suite")
 
             # set the keyboard options..
             print " --> Configuring keyboard"

@@ -18,6 +18,7 @@ import xml.dom.minidom
 from xml.dom.minidom import parse
 
 from installer import InstallerEngine, Setup, PartitionSetup
+from ui.qt_packageselector import PackageSelector
 
 from PyQt4 import QtGui, QtCore, uic
 import qt_resources_rc
@@ -51,7 +52,7 @@ class InstallerWindow(QtGui.QMainWindow):
  
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_interface.ui')
         self.ui.show()
-        
+
         # Move main window to center
         qr = self.ui.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
@@ -60,7 +61,16 @@ class InstallerWindow(QtGui.QMainWindow):
 
         # Build the Setup object (where we put all our choices)
         self.setup = Setup()
-        
+
+# REMOVE ME
+        packageSelector = PackageSelector(self.setup)
+        packageSelector.show()
+        print "----------------------------------------------"
+        print "Packages marked for installation"
+        print "----------------------------------------------"
+        print self.setup.installList
+# REMOVE ME
+
         # Detect and set the bios type (bios, efi)
         self.detect_bios_type()
         
@@ -90,7 +100,9 @@ class InstallerWindow(QtGui.QMainWindow):
         
         self.connect(self.ui.refreshPartitionButton, QtCore.SIGNAL("clicked()"), self.refreshPartitionButton_clicked)
         self.connect(self.ui.editPartitionButton, QtCore.SIGNAL("clicked()"), self.editPartitionButton_clicked)
-        
+
+        self.connect(self.ui.packageSelectorButton, QtCore.SIGNAL("clicked()"), self.packageSelectorButton_clicked)
+
         # Set welcome radio button checked
         self.setOverviewRadioButtons(self.PAGE_WELCOME)
         
@@ -111,12 +123,6 @@ class InstallerWindow(QtGui.QMainWindow):
         # Connect the bootloader combo boxes
         self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
         self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
-
-        # Connect the webbrowser combo box
-        self.connect(self.ui.webbrowserComboBox, QtCore.SIGNAL("activated(int)"), self.webbrowserComboBox_activated)
-
-        # Connect the office suite combo box
-        self.connect(self.ui.officeSuiteComboBox, QtCore.SIGNAL("activated(int)"), self.officeSuiteComboBox_activated)
 
     def backButton_clicked(self):
         ''' Jump one page back '''
@@ -146,7 +152,12 @@ class InstallerWindow(QtGui.QMainWindow):
             os.popen("gparted &")
         else:
             os.popen("gparted %s &" % self.setup.target_disk)
-    
+
+    def packageSelectorButton_clicked(self):
+        ''' Show the package selector '''
+        packageSelector = PackageSelector(self)
+        packageSelector.show()
+
     def partitionContextMenu(self, position):
         ''' Right-click partition menu '''
         tableItem = self.ui.partitionTableWidget.itemAt(position)
@@ -416,32 +427,6 @@ class InstallerWindow(QtGui.QMainWindow):
         self.setup.bootloader_device = bootloader_device
         self.setup.print_setup()
 
-    def webbrowserComboBox_activated(self, index):
-        ''' Get the clicked webbrowser '''
-        if (index is None):
-            return
-
-        webbrowser = str(self.ui.webbrowserComboBox.itemData(index, 32).toString())
-        
-        if(len(webbrowser) < 1):
-            return
-        
-        self.setup.webbrowser = webbrowser
-        self.setup.print_setup()
-
-    def officeSuiteComboBox_activated(self, index):
-        ''' Get the clicked office suite '''
-        if (index is None):
-            return
-
-        officeSuite = str(self.ui.officeSuiteComboBox.itemData(index, 32).toString())
-        
-        if(len(officeSuite) < 1):
-            return
-        
-        self.setup.officeSuite = officeSuite
-        self.setup.print_setup()
-
     def getCurrentPageIndex(self):
         ''' Get the current page index '''
         return self.ui.pageStack.currentIndex()
@@ -475,8 +460,6 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_partitions()
                 self.build_bootloader_partitions()
-                self.build_webbrowser_list()
-                self.build_officeSuite_list()
             elif (index is self.PAGE_ADVANCED):
                 self.ui.headLabel.setText(unicode("Advanced Settings"))
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/advanced.png"))
@@ -513,9 +496,6 @@ class InstallerWindow(QtGui.QMainWindow):
                 summaryText += "----------------------------------------\r\n"
                 for partition in self.setup.partitions:
                     summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)
-                summaryText += "----------------------------------------\r\n"
-                summaryText += "Webbrowser: %s\r\n" % self.setup.webbrowser
-                summaryText += "Office Suite: %s\r\n" % self.setup.officeSuite
                 summaryText += "----------------------------------------\r\n"
                 
                 self.ui.summaryTextEdit.setText(summaryText)
@@ -1377,50 +1357,6 @@ class InstallerWindow(QtGui.QMainWindow):
             # If we found the target disk, select it
             if (not set_index is None):
                 self.ui.bootloaderDeviceComboBox.setCurrentIndex(set_index)
-        self.setup.print_setup()
-
-    def build_webbrowser_list(self):
-        self.ui.webbrowserComboBox.clear()
-        cur_index = -1
-        # list of browsers to choose from
-        if (self.setup.internet_connectivity == True):
-            browsers = ["none","firefox","chromium","opera"]
-        else:
-            browsers = ["none"]
-        
-        for webbrowser in browsers:
-            cur_index += 1
-            self.ui.webbrowserComboBox.addItem(QtCore.QString(webbrowser))
-            self.ui.webbrowserComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(webbrowser)), 32)
-            # 1st browser in array is our default browser
-            if (cur_index == 0):
-                set_index = cur_index
-                self.setup.webbrowser = webbrowser
-        
-        if (not set_index is None):
-            self.ui.webbrowserComboBox.setCurrentIndex(set_index)
-        self.setup.print_setup()
-
-    def build_officeSuite_list(self):
-        self.ui.officeSuiteComboBox.clear()
-        cur_index = -1
-        # list of office suites to choose from
-        if (self.setup.internet_connectivity == True):
-            officeSuites = ["none","calligra","libreoffice"]
-        else:
-            officeSuites = ["none"]
-        
-        for officeSuite in officeSuites:
-            cur_index += 1
-            self.ui.officeSuiteComboBox.addItem(QtCore.QString(officeSuite))
-            self.ui.officeSuiteComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(officeSuite)), 32)
-            # 1st office suite in array is our default one
-            if (cur_index == 0):
-                set_index = cur_index
-                self.setup.officeSuite = officeSuite
-        
-        if (not set_index is None):
-            self.ui.officeSuiteComboBox.setCurrentIndex(set_index)
         self.setup.print_setup()
 
     def verify_user_settings(self):
