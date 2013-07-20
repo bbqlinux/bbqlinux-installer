@@ -1,0 +1,9 @@
+BBQLinux Installer
+------------------------------------------------------------------------
+
+Package Selector
+------------------------------------------------------------------------
+- Should be only accessable while connected to the internet
+- Handle selected packages during installation
+- GUI: status icon alignment
+- GUI: checkbox alignment
