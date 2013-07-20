@@ -16,10 +16,75 @@ GUI_PACKAGE_STATUS = 1
 GUI_PACKAGE_NAME = 2
 GUI_PACKAGE_VERSION = 3
 
+class WorkThread(QtCore.QThread):
+	
+    repo_db_dir = '/var/lib/pacman/sync/'
+
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        
+    def build_repo_list(self):
+        self.repoList = []
+
+        dirList=os.listdir(self.repo_db_dir)
+        for fname in dirList:
+            # Remove file extension
+            repo = fname[:-3]
+            self.repoList.append(repo)
+ 
+    def run(self):
+        ''' Parse package database '''
+        self.build_repo_list()
+        packageList = list()
+        pkg_num = 0
+
+        for repo in self.repoList:
+            tar = tarfile.open(mode="r:*", fileobj = file(self.repo_db_dir + repo + '.db'))
+
+            memberList = tar.getmembers()
+
+            for member in memberList:        
+                if (member.name.endswith('/desc')):
+                    pkg_num += 1
+                    packageData = list()
+                    packageData.insert(PKG_REPO, repo)
+
+                    fobject = tar.extractfile(member)
+
+                    loop = 1
+                    while loop == 1:
+                        content = fobject.readline()
+                        # If we've reached EOF, break
+                        if not content:
+                            loop = 0
+
+                        if "%NAME%" in content:
+                            pkg_name = fobject.readline().rstrip('\n')
+                            packageData.insert(PKG_NAME, pkg_name)
+
+                        if "%VERSION%" in content:
+                            pkg_version = fobject.readline().rstrip('\n')
+                            packageData.insert(PKG_VERSION, pkg_version)
+
+                        if "%DESC%" in content:
+                            pkg_desc = ""
+                            desc_loop = 1
+                            while desc_loop == 1:
+                                content = fobject.readline()
+                                if (not content == '\n'):
+                                    pkg_desc += content
+                                else:
+                                    desc_loop = 0
+                            packageData.insert(PKG_DESC, pkg_desc)
+                            loop = 0
+
+                    packageList.insert(pkg_num, packageData)  
+        self.emit(QtCore.SIGNAL('aa'), packageList, self.repoList)
+        return
+
 class PackageSelector(object):
 
     resource_dir = '/usr/share/bbqlinux-installer/'
-    repo_db_dir = '/var/lib/pacman/sync/'
 
     def __init__(self, setup):
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_package_selector.ui')
@@ -35,8 +100,11 @@ class PackageSelector(object):
         # Connect the package table
         QtCore.QObject.connect(self.ui.packageTableWidget, QtCore.SIGNAL("itemClicked(QTableWidgetItem *)"), self.packageTableWidgetItem_clicked)
 
-        # Build the list of available repos
-        self.build_repo_list()
+        # adding by emitting signal in different thread
+        self.workThread = WorkThread()
+        QtCore.QObject.connect(self.workThread, QtCore.SIGNAL('aa'), self.build_package_list)
+        self.workThread.start()
+        self.packageList = []
         
         # Get a list of installed packages
         self.list_installed_packages()
@@ -46,6 +114,9 @@ class PackageSelector(object):
 
         # Packages to install
         self.setup.installList = []
+        
+        # Initial status update
+        self.updateStatus("Loading repos...")
         
     def updateStatus(self, status):
         self.ui.loadingStatus.setText("Status: "+status)
@@ -67,35 +138,17 @@ class PackageSelector(object):
         statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
         self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
-    def build_repo_list(self):
-        self.repoList = []
-
-        dirList=os.listdir(self.repo_db_dir)
-        for fname in dirList:
-            # Remove file extension
-            repo = fname[:-3]
-            self.repoList.append(repo)
-            item = QtGui.QListWidgetItem(repo)
-            item.setData(32, QtCore.QVariant(QtCore.QString(repo)))
-            self.ui.repoListWidget.addItem(item)
-
-        self.ui.repoListWidget.sortItems(QtCore.Qt.AscendingOrder)
-        self.updateStatus("Completed parsing repo lists")
-        print "Available repos: %s" % self.repoList
-
     def repoListItem_clicked(self, item):
         ''' Build package list for selected repo '''
         repo = str(item.data(32).toString())
         self.updateStatus("Loading repo, "+repo)
-
-        packageList = self.build_package_list()
 
         row = -1
         # Clear the table
         self.ui.packageTableWidget.clearContents()
         self.ui.packageTableWidget.setRowCount(0)
 
-        for package in packageList:
+        for package in self.packageList:
             if (package[PKG_REPO] == repo):
                 row += 1
                 self.ui.packageTableWidget.verticalHeader().setVisible(False)
@@ -207,54 +260,20 @@ class PackageSelector(object):
 
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
 
-    def build_package_list(self):
+    def update_repo_list(self, repo_list):
+        self.repoList = repo_list
+        for repo in repo_list:
+            item = QtGui.QListWidgetItem(repo)
+            item.setData(32, QtCore.QVariant(QtCore.QString(repo)))
+            self.ui.repoListWidget.addItem(item)
+
+        print "Available repos: %s" % self.repoList
+
+    def build_package_list(self, workerList, workerRepoList):
         ''' Parse package database '''
-        packageList = list()
-        pkg_num = 0
-
-        for repo in self.repoList:
-            tar = tarfile.open(mode="r:*", fileobj = file(self.repo_db_dir + repo + '.db'))
-
-            memberList = tar.getmembers()
-
-            for member in memberList:              
-                if (member.name.endswith('/desc')):
-                    pkg_num += 1
-                    packageData = list()
-                    packageData.insert(PKG_REPO, repo)
-
-                    fobject = tar.extractfile(member)
-
-                    loop = 1
-                    while loop == 1:
-                        content = fobject.readline()
-                        # If we've reached EOF, break
-                        if not content:
-                            loop = 0
-
-                        if "%NAME%" in content:
-                            pkg_name = fobject.readline().rstrip('\n')
-                            packageData.insert(PKG_NAME, pkg_name)
-
-                        if "%VERSION%" in content:
-                            pkg_version = fobject.readline().rstrip('\n')
-                            packageData.insert(PKG_VERSION, pkg_version)
-
-                        if "%DESC%" in content:
-                            pkg_desc = ""
-                            desc_loop = 1
-                            while desc_loop == 1:
-                                content = fobject.readline()
-                                if (not content == '\n'):
-                                    pkg_desc += content
-                                else:
-                                    desc_loop = 0
-                            packageData.insert(PKG_DESC, pkg_desc)
-                            loop = 0
-
-                    packageList.insert(pkg_num, packageData)
-
-        return packageList
+        self.packageList = workerList
+        self.update_repo_list(workerRepoList)
+        self.updateStatus("Good")
 
     def show(self):
         ''' Show the Dialog window '''
