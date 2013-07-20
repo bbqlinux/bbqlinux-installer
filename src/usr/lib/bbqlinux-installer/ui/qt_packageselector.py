@@ -11,10 +11,10 @@ PKG_NAME = 1
 PKG_VERSION = 2
 PKG_DESC = 3
 
-INDEX_PACKAGE_CHECKBOX = 0
-INDEX_PACKAGE_STATUS = 1
-INDEX_PACKAGE_NAME = 2
-INDEX_PACKAGE_VERSION = 3
+GUI_PACKAGE_CHECKBOX = 0
+GUI_PACKAGE_STATUS = 1
+GUI_PACKAGE_NAME = 2
+GUI_PACKAGE_VERSION = 3
 
 class PackageSelector(object):
 
@@ -89,26 +89,26 @@ class PackageSelector(object):
                 chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
                 chkBoxItem.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)  
-                self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_CHECKBOX, chkBoxItem)
+                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_CHECKBOX, chkBoxItem)
 
                 # package name
                 tableItem = QtGui.QTableWidgetItem(QtCore.QString(package[PKG_NAME]))            
                 tableItem.setData(32, QtCore.QVariant(QtCore.QString(package[PKG_NAME])))
                 tableItem.setData(33, QtCore.QVariant(QtCore.QString(package[PKG_VERSION])))
                 tableItem.setData(34, QtCore.QVariant(QtCore.QString(package[PKG_DESC])))
-                self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_NAME, tableItem)
+                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_NAME, tableItem)
 
                 # package version
                 tableItem = QtGui.QTableWidgetItem(QtCore.QString(package[PKG_VERSION]))
                 tableItem.setData(32, QtCore.QVariant(QtCore.QString(package[PKG_VERSION])))
-                self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_VERSION, tableItem)
+                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_VERSION, tableItem)
 
                 # if the package is part of the install list, mark it
                 if (package[PKG_NAME] in self.setup.installList):
                     statusIconPath = self.resource_dir + '/icons/actions/software-update-available-2.png'
                     statusIcon = QtGui.QIcon(statusIconPath)
                     statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
-                    self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
+                    self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
                 # Resize to contents after we got 20 items
                 if (row == 20):
@@ -117,7 +117,6 @@ class PackageSelector(object):
                     self.ui.packageTableWidget.resizeRowsToContents()
                     self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
 
-                #print "Package: %s %s" % (package[PKG_NAME], package[PKG_VERSION])
                 self.updateStatus("Loading Package, %s %s" % (package[PKG_NAME], package[PKG_VERSION]))
 
         self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
@@ -140,15 +139,15 @@ class PackageSelector(object):
         rows = self.ui.packageTableWidget.rowCount()
 
         for row in range(rows):
-            chkBoxItem = self.ui.packageTableWidget.item(row, INDEX_PACKAGE_CHECKBOX)
+            chkBoxItem = self.ui.packageTableWidget.item(row, GUI_PACKAGE_CHECKBOX)
             if (chkBoxItem.checkState() == QtCore.Qt.Checked):
-                pkgItem = self.ui.packageTableWidget.item(row, INDEX_PACKAGE_NAME)
+                pkgItem = self.ui.packageTableWidget.item(row, GUI_PACKAGE_NAME)
                 pkgName = str(pkgItem.data(32).toString())
 
                 statusIconPath = self.resource_dir + '/icons/actions/software-update-available-2.png'
                 statusIcon = QtGui.QIcon(statusIconPath)
                 statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
-                self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
+                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
                 if (not pkgName in self.setup.installList):
                     print "Adding: %s " % (pkgName)
@@ -164,14 +163,14 @@ class PackageSelector(object):
         rows = self.ui.packageTableWidget.rowCount()
 
         for row in range(rows):
-            chkBoxItem = self.ui.packageTableWidget.item(row, INDEX_PACKAGE_CHECKBOX)
+            chkBoxItem = self.ui.packageTableWidget.item(row, GUI_PACKAGE_CHECKBOX)
             if (chkBoxItem.checkState() == QtCore.Qt.Checked):
-                pkgItem = self.ui.packageTableWidget.item(row, INDEX_PACKAGE_NAME)
+                pkgItem = self.ui.packageTableWidget.item(row, GUI_PACKAGE_NAME)
                 pkgName = str(pkgItem.data(32).toString())
 
                 if (pkgName in self.setup.installList):
                     statusItem = QtGui.QTableWidgetItem(QtCore.QString(""))
-                    self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
+                    self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
                     
                     print "Removing: %s " % (pkgName)
                     self.updateStatus("Removing package, "+pkgName)
@@ -193,7 +192,6 @@ class PackageSelector(object):
 
             for member in memberList:              
                 if (member.name.endswith('/desc')):
-                    #print "Processing member: %s" % member.name
                     pkg_num += 1
                     packageData = list()
                     packageData.insert(PKG_REPO, repo)
@@ -210,12 +208,10 @@ class PackageSelector(object):
                         if "%NAME%" in content:
                             pkg_name = fobject.readline().rstrip('\n')
                             packageData.insert(PKG_NAME, pkg_name)
-                            #print "Package name: %s" % pkg_name
 
                         if "%VERSION%" in content:
                             pkg_version = fobject.readline().rstrip('\n')
                             packageData.insert(PKG_VERSION, pkg_version)
-                            #print "Package version: %s" % pkg_version
 
                         if "%DESC%" in content:
                             pkg_desc = ""
@@ -227,7 +223,6 @@ class PackageSelector(object):
                                 else:
                                     desc_loop = 0
                             packageData.insert(PKG_DESC, pkg_desc)
-                            #print "Package description: %s" % pkg_desc
                             loop = 0
 
                     packageList.insert(pkg_num, packageData)
