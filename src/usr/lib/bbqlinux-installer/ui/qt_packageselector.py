@@ -110,6 +110,13 @@ class PackageSelector(object):
                     statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
                     self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
 
+                # Resize to contents after we got 20 items
+                if (row == 20):
+                    self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
+                    self.ui.packageTableWidget.resizeColumnsToContents()
+                    self.ui.packageTableWidget.resizeRowsToContents()
+                    self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
+
                 #print "Package: %s %s" % (package[PKG_NAME], package[PKG_VERSION])
                 self.updateStatus("Loading Package, %s %s" % (package[PKG_NAME], package[PKG_VERSION]))
 

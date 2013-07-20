@@ -227,7 +227,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
 
             # Steps:
-            our_total = 13
+            our_total = 14
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -443,7 +443,7 @@ class InstallerEngine(QtCore.QThread):
             print " --> Configuring Grub"
             our_current += 1
             if(setup.bootloader_device is not None):
-                self.update_progress(total=0, current=0, message="Installing bootloader")
+                self.update_progress(total=our_total, current=our_current, message="Installing bootloader")
 
                 if(self.setup.bios_type == "efi"):
                     # EFI
@@ -471,6 +471,15 @@ class InstallerEngine(QtCore.QThread):
                         self.error_message(message="The bootloader wasn't configured properly! You need to configure it manually.", critical=True)
                         self.exit(2)
                         break
+
+            # install user selected packages
+            our_current += 1
+            if (setup.internet_connectivity == True):
+                if self.setup.installList:
+                    print " --> Installing additional packages"
+                    for package in self.setup.installList:
+                        self.update_progress(total=our_total, current=our_current, message="Installing %s" % package)
+                        self.do_run_in_chroot("pacman -S --noconfirm %s" % package)
 
             # now unmount it
             print " --> Unmounting partitions"

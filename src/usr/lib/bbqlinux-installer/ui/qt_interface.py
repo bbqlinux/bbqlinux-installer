@@ -101,7 +101,12 @@ class InstallerWindow(QtGui.QMainWindow):
         self.connect(self.ui.refreshPartitionButton, QtCore.SIGNAL("clicked()"), self.refreshPartitionButton_clicked)
         self.connect(self.ui.editPartitionButton, QtCore.SIGNAL("clicked()"), self.editPartitionButton_clicked)
 
+        # Package selector button
         self.connect(self.ui.packageSelectorButton, QtCore.SIGNAL("clicked()"), self.packageSelectorButton_clicked)
+        if (self.setup.internet_connectivity == True):
+            self.ui.packageSelectorButton.setEnabled(True)
+        else:
+            self.ui.packageSelectorButton.setEnabled(False)
 
         # Set welcome radio button checked
         self.setOverviewRadioButtons(self.PAGE_WELCOME)
