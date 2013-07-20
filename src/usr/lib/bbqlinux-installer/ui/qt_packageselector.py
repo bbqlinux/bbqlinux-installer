@@ -103,6 +103,13 @@ class PackageSelector(object):
                 tableItem.setData(32, QtCore.QVariant(QtCore.QString(package[PKG_VERSION])))
                 self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_VERSION, tableItem)
 
+                # if the package is part of the install list, mark it
+                if (package[PKG_NAME] in self.setup.installList):
+                    statusIconPath = self.resource_dir + '/icons/actions/software-update-available-2.png'
+                    statusIcon = QtGui.QIcon(statusIconPath)
+                    statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
+                    self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
+
                 #print "Package: %s %s" % (package[PKG_NAME], package[PKG_VERSION])
                 self.updateStatus("Loading Package, %s %s" % (package[PKG_NAME], package[PKG_VERSION]))
 
