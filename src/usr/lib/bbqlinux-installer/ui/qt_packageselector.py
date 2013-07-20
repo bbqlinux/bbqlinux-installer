@@ -37,6 +37,9 @@ class PackageSelector(object):
 
         # Build the list of available repos
         self.build_repo_list()
+        
+        # Get a list of installed packages
+        self.list_installed_packages()
 
         # Setup object
         self.setup = setup
@@ -48,6 +51,21 @@ class PackageSelector(object):
         self.ui.loadingStatus.setText("Status: "+status)
         while QtGui.qApp.hasPendingEvents():
             QtGui.qApp.processEvents()
+
+    def list_installed_packages(self):
+        self.excluded_packages = []
+        self.updateStatus("Getting a list of installed packages...")
+        output = subprocess.check_output(['pacman', '-Q']).splitlines()
+        for x in output:
+            x = x.split(" ")[0]
+            self.excluded_packages.append(x)
+        self.updateStatus("Good")
+        
+    def updateExcludedRow(self, row):
+        statusIconPath = self.resource_dir + '/icons/actions/dialog-warning-3.png'
+        statusIcon = QtGui.QIcon(statusIconPath)
+        statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
+        self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
     def build_repo_list(self):
         self.repoList = []
@@ -83,10 +101,19 @@ class PackageSelector(object):
                 self.ui.packageTableWidget.verticalHeader().setVisible(False)
                 self.ui.packageTableWidget.sortItems(0, 0)
                 self.ui.packageTableWidget.insertRow(row)
+                
+                isExcluded = False
+                if package[PKG_NAME] in self.excluded_packages:
+                   isExcluded = True
 
                 # Checkbox
                 chkBoxItem = QtGui.QTableWidgetItem()
-                chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                if isExcluded:
+                    chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
+                    self.updateExcludedRow(row)
+                else:
+                    chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+				    
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
                 chkBoxItem.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)  
                 self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_CHECKBOX, chkBoxItem)
