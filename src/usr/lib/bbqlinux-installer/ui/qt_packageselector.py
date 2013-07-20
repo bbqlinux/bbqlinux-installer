@@ -23,7 +23,7 @@ class PackageSelector(object):
 
     def __init__(self, setup):
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_package_selector.ui')
-
+        
         # Connect the buttons
         QtCore.QObject.connect(self.ui.doneButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
         QtCore.QObject.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self.addButton_clicked)
@@ -43,6 +43,11 @@ class PackageSelector(object):
 
         # Packages to install
         self.setup.installList = []
+        
+    def updateStatus(self, status):
+        self.ui.loadingStatus.setText("Status: "+status)
+        while QtGui.qApp.hasPendingEvents():
+            QtGui.qApp.processEvents()
 
     def build_repo_list(self):
         self.repoList = []
@@ -57,11 +62,13 @@ class PackageSelector(object):
             self.ui.repoListWidget.addItem(item)
 
         self.ui.repoListWidget.sortItems(QtCore.Qt.AscendingOrder)
+        self.updateStatus("Completed parsing repo lists")
         print "Available repos: %s" % self.repoList
 
     def repoListItem_clicked(self, item):
         ''' Build package list for selected repo '''
         repo = str(item.data(32).toString())
+        self.updateStatus("Loading repo, "+repo)
 
         packageList = self.build_package_list()
 
@@ -97,11 +104,13 @@ class PackageSelector(object):
                 self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_VERSION, tableItem)
 
                 #print "Package: %s %s" % (package[PKG_NAME], package[PKG_VERSION])
+                self.updateStatus("Loading Package, %s %s" % (package[PKG_NAME], package[PKG_VERSION]))
 
         self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
         self.ui.packageTableWidget.resizeColumnsToContents()
         self.ui.packageTableWidget.resizeRowsToContents()
         self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
+        self.updateStatus("%s has been successfully loaded!" % (repo))
 
     def packageTableWidgetItem_clicked(self, item):
         ''' Show package description '''
@@ -129,7 +138,9 @@ class PackageSelector(object):
 
                 if (not pkgName in self.setup.installList):
                     print "Adding: %s " % (pkgName)
+                    self.updateStatus("Adding package, "+pkgName)
                     self.setup.installList.append(pkgName)
+                    self.updateStatus("%s has been added!, " % (pkgName))
                     print self.setup.installList
                 
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
@@ -149,7 +160,9 @@ class PackageSelector(object):
                     self.ui.packageTableWidget.setItem(row, INDEX_PACKAGE_STATUS, statusItem)
                     
                     print "Removing: %s " % (pkgName)
+                    self.updateStatus("Removing package, "+pkgName)
                     self.setup.installList.remove(pkgName)
+                    self.updateStatus("%s has been removed!, " % (pkgName))
                     print self.setup.installList
 
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
