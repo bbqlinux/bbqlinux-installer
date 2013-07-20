@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>698</width>
-    <height>575</height>
+    <height>597</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -227,6 +227,25 @@
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Repositories</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_6">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>570</y>
+     <width>681</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <item>
+     <widget class="QLabel" name="loadingStatus">
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </item>
