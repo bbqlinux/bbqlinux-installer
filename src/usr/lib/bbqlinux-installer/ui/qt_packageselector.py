@@ -94,6 +94,7 @@ class PackageSelector(object):
         QtCore.QObject.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self.addButton_clicked)
         QtCore.QObject.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self.removeButton_clicked)
         QtCore.QObject.connect(self.ui.searchButton, QtCore.SIGNAL("clicked()"), self.searchButton_clicked)
+        QtCore.QObject.connect(self.ui.searchEdit, QtCore.SIGNAL("returnPressed()"), self.searchButton_clicked)
 
         # Connect the repo list
         QtCore.QObject.connect(self.ui.repoListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.repoListItem_clicked)
