@@ -88,11 +88,13 @@ class PackageSelector(object):
 
     def __init__(self, setup):
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_package_selector.ui')
+        self.current_repo_item = ""
         
         # Connect the buttons
         QtCore.QObject.connect(self.ui.doneButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
         QtCore.QObject.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self.addButton_clicked)
         QtCore.QObject.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self.removeButton_clicked)
+        QtCore.QObject.connect(self.ui.searchButton, QtCore.SIGNAL("clicked()"), self.searchButton_clicked)
 
         # Connect the repo list
         QtCore.QObject.connect(self.ui.repoListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.repoListItem_clicked)
@@ -139,7 +141,12 @@ class PackageSelector(object):
         self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
     def repoListItem_clicked(self, item):
+        self.ui.searchEdit.setText("")
+        self.update_repoListItem(item, "")
+
+    def update_repoListItem(self, item, search):
         ''' Build package list for selected repo '''
+        self.current_repo_item = item
         repo = str(item.data(32).toString())
         self.updateStatus("Loading repo, "+repo)
 
@@ -149,7 +156,7 @@ class PackageSelector(object):
         self.ui.packageTableWidget.setRowCount(0)
 
         for package in self.packageList:
-            if (package[PKG_REPO] == repo):
+            if (package[PKG_REPO] == repo) and (search in QtCore.QString(package[PKG_NAME])):
                 row += 1
                 self.ui.packageTableWidget.verticalHeader().setVisible(False)
                 self.ui.packageTableWidget.sortItems(0, 0)
@@ -237,6 +244,15 @@ class PackageSelector(object):
                     print self.setup.installList
                 
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
+                
+    def searchButton_clicked(self):
+        ''' Search through the currently selected repo '''
+        if (self.current_repo_item):
+            search_object = self.ui.searchEdit.text()
+            if (len(search_object) > 1):
+                self.update_repoListItem(self.current_repo_item, search_object)
+            else:
+                self.updateStatus("Need at least 2 letters to search!")
 
     def removeButton_clicked(self):
         ''' Remove selected packages from our install list '''
