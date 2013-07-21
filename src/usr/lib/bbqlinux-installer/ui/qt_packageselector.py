@@ -93,6 +93,8 @@ class PackageSelector(object):
         QtCore.QObject.connect(self.ui.doneButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
         QtCore.QObject.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self.addButton_clicked)
         QtCore.QObject.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self.removeButton_clicked)
+        QtCore.QObject.connect(self.ui.searchButton, QtCore.SIGNAL("clicked()"), self.searchButton_clicked)
+        QtCore.QObject.connect(self.ui.searchEdit, QtCore.SIGNAL("returnPressed()"), self.searchButton_clicked)
 
         # Connect the repo list
         QtCore.QObject.connect(self.ui.repoListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.repoListItem_clicked)
@@ -138,10 +140,64 @@ class PackageSelector(object):
         statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
         self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
 
+    def add_packageWidgetItem(self, row, pkg_name, pkg_version, pkg_desc):
+        self.ui.packageTableWidget.verticalHeader().setVisible(False)
+        self.ui.packageTableWidget.sortItems(0, 0)
+        self.ui.packageTableWidget.insertRow(row)
+                
+        isExcluded = False
+        if pkg_name in self.excluded_packages:
+            isExcluded = True
+
+        # Checkboxsubprocess.check_output(['pacman', '-Q']).splitlines()
+        chkBoxItem = QtGui.QTableWidgetItem()
+        if isExcluded:
+            chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
+            self.updateExcludedRow(row)
+        else:
+            chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+				    
+        chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
+        chkBoxItem.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)  
+        self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_CHECKBOX, chkBoxItem)
+
+        # package name
+        tableItem = QtGui.QTableWidgetItem(pkg_name)            
+        tableItem.setData(32, QtCore.QVariant(pkg_name))
+        tableItem.setData(33, QtCore.QVariant(pkg_version))
+        tableItem.setData(34, QtCore.QVariant(pkg_desc))
+        self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_NAME, tableItem)
+
+        # package version
+        tableItem = QtGui.QTableWidgetItem(pkg_version)
+        tableItem.setData(32, QtCore.QVariant(pkg_version))
+        self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_VERSION, tableItem)
+
+        # if the package is part of the install list, mark it
+        if (pkg_name in self.setup.installList):
+            statusIconPath = self.resource_dir + '/icons/actions/software-update-available-2.png'
+            statusIcon = QtGui.QIcon(statusIconPath)
+            statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
+            self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
+
+        # Resize to contents after we got 20 items
+        if (row == 20):
+            self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
+            self.ui.packageTableWidget.resizeColumnsToContents()
+            self.ui.packageTableWidget.resizeRowsToContents()
+            self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
+        self.updateStatus("Loading Package, %s %s" % (pkg_name, pkg_version))
+
+    def footer_TableWidget(self):
+        self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
+        self.ui.packageTableWidget.resizeColumnsToContents()
+        self.ui.packageTableWidget.resizeRowsToContents()
+        self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
+        
     def repoListItem_clicked(self, item):
         ''' Build package list for selected repo '''
+        self.ui.searchEdit.setText("")
         repo = str(item.data(32).toString())
-        self.updateStatus("Loading repo, "+repo)
 
         row = -1
         # Clear the table
@@ -151,59 +207,31 @@ class PackageSelector(object):
         for package in self.packageList:
             if (package[PKG_REPO] == repo):
                 row += 1
-                self.ui.packageTableWidget.verticalHeader().setVisible(False)
-                self.ui.packageTableWidget.sortItems(0, 0)
-                self.ui.packageTableWidget.insertRow(row)
-                
-                isExcluded = False
-                if package[PKG_NAME] in self.excluded_packages:
-                   isExcluded = True
+                self.add_packageWidgetItem(row,
+                    QtCore.QString(package[PKG_NAME]),
+                    QtCore.QString(package[PKG_VERSION]),
+                    QtCore.QString(package[PKG_DESC]))
 
-                # Checkbox
-                chkBoxItem = QtGui.QTableWidgetItem()
-                if isExcluded:
-                    chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
-                    self.updateExcludedRow(row)
-                else:
-                    chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-				    
-                chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
-                chkBoxItem.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)  
-                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_CHECKBOX, chkBoxItem)
-
-                # package name
-                tableItem = QtGui.QTableWidgetItem(QtCore.QString(package[PKG_NAME]))            
-                tableItem.setData(32, QtCore.QVariant(QtCore.QString(package[PKG_NAME])))
-                tableItem.setData(33, QtCore.QVariant(QtCore.QString(package[PKG_VERSION])))
-                tableItem.setData(34, QtCore.QVariant(QtCore.QString(package[PKG_DESC])))
-                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_NAME, tableItem)
-
-                # package version
-                tableItem = QtGui.QTableWidgetItem(QtCore.QString(package[PKG_VERSION]))
-                tableItem.setData(32, QtCore.QVariant(QtCore.QString(package[PKG_VERSION])))
-                self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_VERSION, tableItem)
-
-                # if the package is part of the install list, mark it
-                if (package[PKG_NAME] in self.setup.installList):
-                    statusIconPath = self.resource_dir + '/icons/actions/software-update-available-2.png'
-                    statusIcon = QtGui.QIcon(statusIconPath)
-                    statusItem = QtGui.QTableWidgetItem(statusIcon, QtCore.QString(""))
-                    self.ui.packageTableWidget.setItem(row, GUI_PACKAGE_STATUS, statusItem)
-
-                # Resize to contents after we got 20 items
-                if (row == 20):
-                    self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
-                    self.ui.packageTableWidget.resizeColumnsToContents()
-                    self.ui.packageTableWidget.resizeRowsToContents()
-                    self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
-
-                self.updateStatus("Loading Package, %s %s" % (package[PKG_NAME], package[PKG_VERSION]))
-
-        self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(False)
-        self.ui.packageTableWidget.resizeColumnsToContents()
-        self.ui.packageTableWidget.resizeRowsToContents()
-        self.ui.packageTableWidget.horizontalHeader().setStretchLastSection(True)
+        self.footer_TableWidget()
         self.updateStatus("%s has been successfully loaded!" % (repo))
+
+    def update_repoListSearch(self, search):
+        ''' Build package list for selected repo '''
+
+        row = -1
+        # Clear the table
+        self.ui.packageTableWidget.clearContents()
+        self.ui.packageTableWidget.setRowCount(0)
+
+        for package in self.packageList:
+            if (search in QtCore.QString(package[PKG_NAME])):
+                row += 1
+                self.add_packageWidgetItem(row,
+                    QtCore.QString(package[PKG_NAME]),
+                    QtCore.QString(package[PKG_VERSION]),
+                    QtCore.QString(package[PKG_DESC]))
+
+        self.footer_TableWidget()
 
     def packageTableWidgetItem_clicked(self, item):
         ''' Show package description '''
@@ -237,6 +265,14 @@ class PackageSelector(object):
                     print self.setup.installList
                 
                 chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
+                
+    def searchButton_clicked(self):
+        ''' Search through the currently selected repo '''
+        search_object = self.ui.searchEdit.text()
+        if (len(search_object) > 1):
+            self.update_repoListSearch(search_object)
+        else:
+            self.updateStatus("Need at least 2 letters to search!")
 
     def removeButton_clicked(self):
         ''' Remove selected packages from our install list '''
