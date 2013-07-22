@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>698</width>
-    <height>597</height>
+    <width>1023</width>
+    <height>533</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
     <rect>
      <x>20</x>
      <y>60</y>
-     <width>151</width>
+     <width>141</width>
      <height>441</height>
     </rect>
    </property>
@@ -34,17 +34,23 @@
   <widget class="QWidget" name="horizontalLayoutWidget_2">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>170</x>
      <y>60</y>
-     <width>501</width>
+     <width>471</width>
      <height>301</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
      <widget class="QTableWidget" name="packageTableWidget">
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="showDropIndicator" stdset="0">
+       <bool>true</bool>
       </property>
       <property name="dragDropOverwriteMode">
        <bool>false</bool>
@@ -74,14 +80,6 @@
       </column>
       <column>
        <property name="text">
-        <string/>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      <column>
-       <property name="text">
         <string>Name</string>
        </property>
       </column>
@@ -97,9 +95,9 @@
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>170</x>
      <y>370</y>
-     <width>501</width>
+     <width>471</width>
      <height>131</height>
     </rect>
    </property>
@@ -109,56 +107,21 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="horizontalLayoutWidget_3">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>530</y>
-     <width>170</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
-    <item>
-     <widget class="QPushButton" name="addButton">
-      <property name="text">
-       <string>Add selected Packages</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="horizontalLayoutWidget_4">
-   <property name="geometry">
-    <rect>
-     <x>353</x>
-     <y>530</y>
-     <width>192</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
-    <item>
-     <widget class="QPushButton" name="removeButton">
-      <property name="text">
-       <string>Remove selected Packages</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
   <widget class="QWidget" name="horizontalLayoutWidget_5">
    <property name="geometry">
     <rect>
-     <x>570</x>
-     <y>530</y>
-     <width>111</width>
-     <height>31</height>
+     <x>840</x>
+     <y>470</y>
+     <width>161</width>
+     <height>29</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_5">
     <item>
      <widget class="QPushButton" name="doneButton">
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
       <property name="text">
        <string>Done</string>
       </property>
@@ -169,9 +132,9 @@
   <widget class="QWidget" name="horizontalLayoutWidget_7">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>170</x>
      <y>20</y>
-     <width>391</width>
+     <width>361</width>
      <height>31</height>
     </rect>
    </property>
@@ -191,7 +154,7 @@
   <widget class="QWidget" name="horizontalLayoutWidget_8">
    <property name="geometry">
     <rect>
-     <x>580</x>
+     <x>540</x>
      <y>20</y>
      <width>101</width>
      <height>31</height>
@@ -218,7 +181,7 @@
     <rect>
      <x>20</x>
      <y>40</y>
-     <width>151</width>
+     <width>141</width>
      <height>21</height>
     </rect>
    </property>
@@ -235,22 +198,124 @@
   <widget class="QWidget" name="horizontalLayoutWidget_6">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>570</y>
-     <width>681</width>
+     <x>20</x>
+     <y>510</y>
+     <width>981</width>
      <height>20</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_6">
     <item>
      <widget class="QLabel" name="loadingStatus">
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string/>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::LogText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_9">
+   <property name="geometry">
+    <rect>
+     <x>650</x>
+     <y>60</y>
+     <width>351</width>
+     <height>401</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_9">
+    <item>
+     <widget class="QTableWidget" name="queueTableWidget">
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="showDropIndicator" stdset="0">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropOverwriteMode">
+       <bool>false</bool>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
+      <property name="gridStyle">
+       <enum>Qt::DotLine</enum>
+      </property>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>30</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>18</number>
+      </attribute>
+      <attribute name="verticalHeaderMinimumSectionSize">
+       <number>18</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string/>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Queue</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_11">
+   <property name="geometry">
+    <rect>
+     <x>650</x>
+     <y>470</y>
+     <width>161</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_11">
+    <item>
+     <widget class="QPushButton" name="clearButton">
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>Clear</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <zorder>horizontalLayoutWidget</zorder>
+  <zorder>horizontalLayoutWidget_2</zorder>
+  <zorder>verticalLayoutWidget</zorder>
+  <zorder>horizontalLayoutWidget_5</zorder>
+  <zorder>horizontalLayoutWidget_7</zorder>
+  <zorder>horizontalLayoutWidget_8</zorder>
+  <zorder>verticalLayoutWidget_2</zorder>
+  <zorder>horizontalLayoutWidget_6</zorder>
+  <zorder>horizontalLayoutWidget_9</zorder>
+  <zorder>loadingStatus</zorder>
+  <zorder>loadingStatus</zorder>
+  <zorder>loadingStatus</zorder>
+  <zorder>horizontalLayoutWidget_11</zorder>
  </widget>
  <resources>
   <include location="qt_resources.qrc"/>
