@@ -238,9 +238,9 @@ class PackageSelector(object):
                     pkg_desc = "No description available"
 
                 self.add_packageWidgetItem(row,
-                    QtCore.QString(package[PKG_NAME]),
-                    QtCore.QString(package[PKG_VERSION]),
-                    QtCore.QString(pkg_desc))
+                    package[PKG_NAME],
+                    package[PKG_VERSION],
+                    pkg_desc)
 
         self.footer_TableWidget(self.ui.packageTableWidget)
         self.updateStatus("%s has been successfully loaded!" % (repo))
@@ -255,12 +255,18 @@ class PackageSelector(object):
 
         self.current_list[:] = []
         for package in self.packageList:
-            if (search in QtCore.QString(package[PKG_NAME])):
+            if (search in package[PKG_NAME]):
                 row += 1
+                pkg_desc = ""
+                try:
+                    pkg_desc = package[PKG_DESC]
+                except:
+                    pkg_desc = "No description available"
+
                 self.add_packageWidgetItem(row,
-                    QtCore.QString(package[PKG_NAME]),
-                    QtCore.QString(package[PKG_VERSION]),
-                    QtCore.QString(package[PKG_DESC]))
+                    package[PKG_NAME],
+                    package[PKG_VERSION],
+                    pkg_desc)
 
         self.footer_TableWidget(self.ui.packageTableWidget)
 
@@ -271,27 +277,28 @@ class PackageSelector(object):
         
         for x in self.setup.installList:
             row += 1
-            self.add_queueWidgetItem(row,
-                QtCore.QString(self.setup.installList[row]))
+            self.add_queueWidgetItem(row, self.setup.installList[row])
                 
         self.footer_TableWidget(self.ui.queueTableWidget)
 
     def packageTableWidgetItem_clicked(self, item):
         ''' Show package description '''
         description = ""
-        pkg_name = item.data(32).toString()
-        pkg_version = item.data(33).toString()
-        pkg_desc = item.data(34).toString()
-        checked = item.data(999).toString()
+        pkg_name = str(item.data(32).toString())
+        pkg_version = str(item.data(33).toString())
+        pkg_desc = str(item.data(34).toString())
+        checked = int(item.data(999).toString())
         
-        if (len(checked) > 0):
+        if (checked > 0):
             if pkg_name in self.excluded_packages:
-                #Display simple dialog
                 description = "Can't uncheck this much needed system package"
             else:
                 if pkg_name not in self.setup.installList:
                     self.setup.installList.append(pkg_name)
                     description = "<html><b>" + pkg_name + "</b> " + pkg_version + " selected</html>"
+                    print pkg_name
+                    print self.current_list
+                    print self.setup.installList
                     self.update_queue()
                 else:
                     self.setup.installList.remove(pkg_name)
@@ -305,9 +312,9 @@ class PackageSelector(object):
         
     def queueTableWidgetItem_clicked(self, item):
         ''' Show package description '''
-        checked = item.data(999).toString()
+        checked = int(item.data(999).toString())
         
-        if (len(checked) > 0):
+        if (checked > 0):
             pkg_name = self.setup.installList[int(checked)]
             self.setup.installList.remove(pkg_name)
             if pkg_name in self.current_list:
