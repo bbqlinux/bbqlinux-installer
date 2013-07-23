@@ -296,9 +296,6 @@ class PackageSelector(object):
                 if pkg_name not in self.setup.installList:
                     self.setup.installList.append(pkg_name)
                     description = "<html><b>" + pkg_name + "</b> " + pkg_version + " selected</html>"
-                    print pkg_name
-                    print self.current_list
-                    print self.setup.installList
                     self.update_queue()
                 else:
                     self.setup.installList.remove(pkg_name)
@@ -354,8 +351,6 @@ class PackageSelector(object):
             item = QtGui.QListWidgetItem(repo)
             item.setData(32, QtCore.QVariant(QtCore.QString(repo)))
             self.ui.repoListWidget.addItem(item)
-
-        print "Available repos: %s" % self.repoList
 
     def build_package_list(self, workerList, workerRepoList):
         ''' Parse package database '''

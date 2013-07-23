@@ -62,15 +62,6 @@ class InstallerWindow(QtGui.QMainWindow):
         # Build the Setup object (where we put all our choices)
         self.setup = Setup()
 
-# REMOVE ME
-        packageSelector = PackageSelector(self.setup)
-        packageSelector.show()
-        print "----------------------------------------------"
-        print "Packages marked for installation"
-        print "----------------------------------------------"
-        print self.setup.installList
-# REMOVE ME
-
         # Detect and set the bios type (bios, efi)
         self.detect_bios_type()
         
