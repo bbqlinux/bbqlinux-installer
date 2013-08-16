@@ -89,7 +89,7 @@ class PackageSelector(object):
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_package_selector.ui')
         
         # Connect the buttons
-        QtCore.QObject.connect(self.ui.doneButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
+        QtCore.QObject.connect(self.ui.doneButton, QtCore.SIGNAL("clicked()"), self.doneButton_clicked)
         QtCore.QObject.connect(self.ui.clearButton, QtCore.SIGNAL("clicked()"), self.clearButton_clicked)
         QtCore.QObject.connect(self.ui.searchButton, QtCore.SIGNAL("clicked()"), self.searchButton_clicked)
         QtCore.QObject.connect(self.ui.searchEdit, QtCore.SIGNAL("returnPressed()"), self.searchButton_clicked)
@@ -119,7 +119,11 @@ class PackageSelector(object):
         
         # Initial status update
         self.updateStatus("Loading repos...")
-        
+
+    def doneButton_clicked(self):
+        ''' Close the dialog window '''
+        self.ui.done(0)
+
     def updateStatus(self, status):
         self.ui.loadingStatus.setText(status)
         while QtGui.qApp.hasPendingEvents():
@@ -142,7 +146,7 @@ class PackageSelector(object):
 
         # Checkbox
         chkBoxItem = QtGui.QTableWidgetItem()
-        chkBoxItem.setData(999, QtCore.QVariant(row))
+        chkBoxItem.setData(35, QtCore.QVariant(row))
         chkBoxItem.setCheckState(QtCore.Qt.Checked)
         chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
         self.ui.queueTableWidget.setItem(row, GUI_PACKAGE_CHECKBOX, chkBoxItem)
@@ -174,9 +178,10 @@ class PackageSelector(object):
 
         # Checkbox
         chkBoxItem = QtGui.QTableWidgetItem()
-        chkBoxItem.setData(999, QtCore.QVariant(row))
         chkBoxItem.setData(32, QtCore.QVariant(pkg_name))
         chkBoxItem.setData(33, QtCore.QVariant(pkg_version))
+        chkBoxItem.setData(35, QtCore.QVariant(row))
+
         if isExcluded:
             chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
             chkBoxItem.setCheckState(QtCore.Qt.Checked)
@@ -287,7 +292,7 @@ class PackageSelector(object):
         pkg_name = str(item.data(32).toString())
         pkg_version = str(item.data(33).toString())
         pkg_desc = str(item.data(34).toString())
-        checked = int(item.data(999).toString())
+        checked = int(item.data(35).toString())
         
         if (checked > 0):
             if pkg_name in self.excluded_packages:
@@ -309,7 +314,7 @@ class PackageSelector(object):
         
     def queueTableWidgetItem_clicked(self, item):
         ''' Show package description '''
-        checked = int(item.data(999).toString())
+        checked = int(item.data(35).toString())
         
         if (checked > 0):
             pkg_name = self.setup.installList[int(checked)]
