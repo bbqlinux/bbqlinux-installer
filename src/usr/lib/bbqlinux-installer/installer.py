@@ -227,7 +227,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
 
             # Steps:
-            our_total = 14
+            our_total = 15
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -482,6 +482,7 @@ class InstallerEngine(QtCore.QThread):
                         self.do_run_in_chroot("pacman -S --noconfirm %s" % package)
 
             # now unmount it
+            our_current += 1
             print " --> Unmounting partitions"
             try:
                 os.system("umount --force /target/dev/shm")

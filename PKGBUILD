@@ -2,7 +2,7 @@
 
 pkgname=bbqlinux-installer
 pkgver=1.1.2
-pkgrel=4
+pkgrel=5
 pkgdesc="The BBQLinux Installer"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-installer"
