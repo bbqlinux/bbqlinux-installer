@@ -342,7 +342,7 @@ class PackageSelector(object):
                 
     def searchButton_clicked(self):
         ''' Search through all repo items '''
-        search_object = self.ui.searchEdit.text()
+        search_object = str(self.ui.searchEdit.text())
         
         if (len(search_object) > 1):
             self.update_repoListSearch(search_object)
