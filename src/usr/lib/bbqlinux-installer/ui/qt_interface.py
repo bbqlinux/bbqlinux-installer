@@ -151,7 +151,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
     def packageSelectorButton_clicked(self):
         ''' Show the package selector '''
-        packageSelector = PackageSelector(self)
+        packageSelector = PackageSelector(self.setup)
         packageSelector.show()
 
     def partitionContextMenu(self, position):
@@ -492,6 +492,10 @@ class InstallerWindow(QtGui.QMainWindow):
                 summaryText += "----------------------------------------\r\n"
                 for partition in self.setup.partitions:
                     summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)
+                summaryText += "----------------------------------------\r\n"
+                summaryText += "Additinal packages:\r\n"
+                for package in self.setup.installList:
+                    summaryText += "%s, " % package
                 summaryText += "----------------------------------------\r\n"
                 
                 self.ui.summaryTextEdit.setText(summaryText)

@@ -475,9 +475,9 @@ class InstallerEngine(QtCore.QThread):
             # install user selected packages
             our_current += 1
             if (setup.internet_connectivity == True):
-                if self.setup.installList:
+                if setup.installList:
                     print " --> Installing additional packages"
-                    for package in self.setup.installList:
+                    for package in setup.installList:
                         self.update_progress(total=our_total, current=our_current, message="Installing %s" % package)
                         self.do_run_in_chroot("pacman -S --noconfirm %s" % package)
 
@@ -596,10 +596,8 @@ class Setup(object):
     bootloader_device = None
     disks = []
     target_disk = None
-
     internet_connectivity = False
-    webbrowser = "firefox"
-    officeSuite = None
+    installList = []
     
     # Descriptions (used by the summary screen)    
     keyboard_model_description = None
@@ -626,8 +624,10 @@ class Setup(object):
                 partition.print_partition()
             print "-------------------------------------------------------------------------"
             print "Internet connectivity: %s" % self.internet_connectivity
-            print "webbrowser: %s" % self.webbrowser
-            print "office suite: %s" % self.officeSuite
+            print "-------------------------------------------------------------------------"
+            print "Additional packages:"
+            for package in setup.installList:
+                print package
             print "-------------------------------------------------------------------------"
 
 class PartitionSetup(object):

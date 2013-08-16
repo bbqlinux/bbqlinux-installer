@@ -114,7 +114,6 @@ class PackageSelector(object):
         self.setup = setup
 
         # Packages to install
-        self.setup.installList = []
         self.current_list = []
         
         # Initial status update
@@ -296,11 +295,11 @@ class PackageSelector(object):
         if item.data(35).canConvert(QtCore.QVariant.Int):
             checked, ok = item.data(35).toInt()
             if (ok == False):
-                checked = 0;
+                checked = -1;
         else:
-            checked = 0;
+            checked = -1;
         
-        if (checked > 0):
+        if (checked >= 0):
             if pkg_name in self.excluded_packages:
                 description = "Can't uncheck this much needed system package"
             else:
@@ -323,11 +322,11 @@ class PackageSelector(object):
         if item.data(35).canConvert(QtCore.QVariant.Int):
             checked, ok = item.data(35).toInt()
             if (ok == False):
-                checked = 0;
+                checked = -1;
         else:
-            checked = 0;
+            checked = -1;
         
-        if (checked > 0):
+        if (checked >= 0):
             pkg_name = self.setup.installList[int(checked)]
             self.setup.installList.remove(pkg_name)
             if pkg_name in self.current_list:
