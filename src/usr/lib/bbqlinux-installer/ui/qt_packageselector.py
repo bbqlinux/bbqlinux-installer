@@ -292,7 +292,13 @@ class PackageSelector(object):
         pkg_name = str(item.data(32).toString())
         pkg_version = str(item.data(33).toString())
         pkg_desc = str(item.data(34).toString())
-        checked = int(item.data(35).toString())
+        
+        if item.data(35).canConvert(QtCore.QVariant.Int):
+            checked, ok = item.data(35).toInt()
+            if (ok == False):
+                checked = 0;
+        else:
+            checked = 0;
         
         if (checked > 0):
             if pkg_name in self.excluded_packages:
@@ -314,7 +320,12 @@ class PackageSelector(object):
         
     def queueTableWidgetItem_clicked(self, item):
         ''' Show package description '''
-        checked = int(item.data(35).toString())
+        if item.data(35).canConvert(QtCore.QVariant.Int):
+            checked, ok = item.data(35).toInt()
+            if (ok == False):
+                checked = 0;
+        else:
+            checked = 0;
         
         if (checked > 0):
             pkg_name = self.setup.installList[int(checked)]
