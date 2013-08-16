@@ -489,14 +489,15 @@ class InstallerWindow(QtGui.QMainWindow):
                 summaryText += "Bootloader device: %s\r\n" % self.setup.bootloader_device
                 summaryText += "Target disk: %s\r\n" % self.setup.target_disk                      
                 summaryText += "Partitions:\r\n"
-                summaryText += "----------------------------------------\r\n"
+                summaryText += "--------------------------------------------------\r\n"
                 for partition in self.setup.partitions:
                     summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)
-                summaryText += "----------------------------------------\r\n"
+                summaryText += "--------------------------------------------------\r\n"
                 summaryText += "Additinal packages:\r\n"
                 for package in self.setup.installList:
                     summaryText += "%s, " % package
-                summaryText += "----------------------------------------\r\n"
+                summaryText += "\r\n"
+                summaryText += "--------------------------------------------------\r\n"
                 
                 self.ui.summaryTextEdit.setText(summaryText)
                 
