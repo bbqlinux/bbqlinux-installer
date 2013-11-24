@@ -1,8 +1,8 @@
 # Maintainer: Daniel Hillenbrand <codeworkx@bbqlinux.org>
 
 pkgname=bbqlinux-installer
-pkgver=1.1.2
-pkgrel=5
+pkgver=1.1.3
+pkgrel=1
 pkgdesc="The BBQLinux Installer"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-installer"

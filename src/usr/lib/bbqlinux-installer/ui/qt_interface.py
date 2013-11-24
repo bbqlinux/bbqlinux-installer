@@ -530,7 +530,9 @@ class InstallerWindow(QtGui.QMainWindow):
         return ''.join(rc)
 
     def detect_bios_type(self):
-        if(os.path.exists("/sys/firmware/efi/vars")):
+        if(os.path.exists("/sys/firmware/efi/vars")): # deprecated
+            bios_type = 'efi'
+        elif(os.path.exists("/sys/firmware/efi/efivars")):
             bios_type = 'efi'
         else:
             bios_type = 'bios'
