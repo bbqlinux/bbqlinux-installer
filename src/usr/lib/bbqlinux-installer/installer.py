@@ -257,6 +257,7 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.do_run_in_chroot("pacman-key --init")
             self.do_run_in_chroot("pacman-key --populate archlinux")
+            self.do_run_in_chroot("pacman-key --populate bbqlinux")
 
             # optimize mirrorlist
             our_current += 1
