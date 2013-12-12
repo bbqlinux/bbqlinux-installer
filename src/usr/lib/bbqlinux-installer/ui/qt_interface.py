@@ -68,6 +68,7 @@ class InstallerWindow(QtGui.QMainWindow):
         # Installer engine
         self.installer = InstallerEngine(self.setup)
         self.connect(self.installer, QtCore.SIGNAL("progressUpdate(int, int, QString)"), self.update_progress)
+        self.connect(self.installer, QtCore.SIGNAL("progressUpdateTextEdit(QString)"), self.update_progressTextEdit)
         self.connect(self.installer, QtCore.SIGNAL("errorMessage(QString, bool)"), self.error_message)
         self.connect(self.installer, QtCore.SIGNAL("installFinished()"), self.install_finished)
 
@@ -493,7 +494,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 for partition in self.setup.partitions:
                     summaryText += "Device: %s, format as: %s, mount as: %s\r\n" % (partition.partition.path, partition.format_as, partition.mount_as)
                 summaryText += "--------------------------------------------------\r\n"
-                summaryText += "Additinal packages:\r\n"
+                summaryText += "Additional packages:\r\n"
                 for package in self.setup.installList:
                     summaryText += "%s, " % package
                 summaryText += "\r\n"
@@ -1444,6 +1445,9 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.installProgressBar.setMaximum(total)
         self.ui.installProgressBar.setValue(current)
         self.ui.installFootLabel.setText(message)
+
+    def update_progressTextEdit(self, text=QtCore.QString("")):
+        self.ui.progressTextEdit.append(text)
 
     def error_message(self, message, critical=False):
         if (critical == True):

@@ -1067,7 +1067,7 @@ p, li { white-space: pre-wrap; }
           </item>
          </layout>
         </widget>
-        <widget class="QGraphicsView" name="graphicsView">
+        <widget class="QTextEdit" name="progressTextEdit">
          <property name="geometry">
           <rect>
            <x>10</x>
@@ -1075,6 +1075,15 @@ p, li { white-space: pre-wrap; }
            <width>601</width>
            <height>211</height>
           </rect>
+         </property>
+         <property name="acceptDrops">
+          <bool>false</bool>
+         </property>
+         <property name="undoRedoEnabled">
+          <bool>false</bool>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </widget>
@@ -1689,7 +1698,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>bootloaderTypeComboBox</tabstop>
   <tabstop>refreshPartitionButton</tabstop>
   <tabstop>summaryTextEdit</tabstop>
-  <tabstop>graphicsView</tabstop>
   <tabstop>editPartitionButton</tabstop>
   <tabstop>partitionTableWidget</tabstop>
   <tabstop>harddiskListWidget</tabstop>

@@ -1,6 +1,5 @@
 import os
 import subprocess
-from subprocess import Popen
 import time
 import shutil
 import gettext
@@ -9,6 +8,8 @@ import traceback
 import commands
 import sys
 import parted
+
+from subprocess import Popen
 from configobj import ConfigObj
 from PyQt4 import QtCore
 
@@ -35,6 +36,9 @@ class InstallerEngine(QtCore.QThread):
 
     def update_progress(self, total, current, message):
         self.emit(QtCore.SIGNAL("progressUpdate(int, int, QString)"), total, current, QtCore.QString(message))
+
+    def update_progressTextEdit(self, text):
+        self.emit(QtCore.SIGNAL("progressUpdateTextEdit(QString)"), QtCore.QString(text))
 
     def error_message(self, message, critical=False):
         self.emit(QtCore.SIGNAL("errorMessage(QString, bool)"), message, critical)
@@ -104,7 +108,7 @@ class InstallerEngine(QtCore.QThread):
                 if(partition.mount_as is not None and partition.mount_as != ""):   
                     if partition.mount_as == "/boot":
                             print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
-                            os.system("mkdir -p /target" + partition.mount_as)
+                            self.do_run("mkdir -p /target" + partition.mount_as)
                             self.do_mount(partition.partition.path, "/target" + partition.mount_as, partition.type, None)
         
         # Mount the other partitions        
@@ -115,7 +119,7 @@ class InstallerEngine(QtCore.QThread):
                 partition.type = "vfat"
             if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
                 print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
-                os.system("mkdir -p /target" + partition.mount_as)
+                self.do_run("mkdir -p /target" + partition.mount_as)
                 # If the partition type is unknown, try auto
                 if ((partition.type == "None") or (partition.type == "Unknown")):
                     partition.type = "auto"
@@ -197,7 +201,7 @@ class InstallerEngine(QtCore.QThread):
                 pass
         
 
-    def install(self, setup):        
+    def install(self, setup):
         # mount the media location.
         print " --> Installation started"
         try:
@@ -232,12 +236,12 @@ class InstallerEngine(QtCore.QThread):
             # chroot
             print " --> Chrooting"
             self.update_progress(total=our_total, current=our_current, message="Entering new system..")            
-            os.system("mount --bind /dev/ /target/dev/")
-            os.system("mount --bind /dev/shm /target/dev/shm")
-            os.system("mount --bind /dev/pts /target/dev/pts")
-            os.system("mount --bind /sys/ /target/sys/")
-            os.system("mount --bind /proc/ /target/proc/")
-            os.system("cp -f /etc/resolv.conf /target/etc/resolv.conf")
+            self.do_run("mount --bind /dev/ /target/dev/")
+            self.do_run("mount --bind /dev/shm /target/dev/shm")
+            self.do_run("mount --bind /dev/pts /target/dev/pts")
+            self.do_run("mount --bind /sys/ /target/sys/")
+            self.do_run("mount --bind /proc/ /target/proc/")
+            self.do_run("cp -f /etc/resolv.conf /target/etc/resolv.conf")
                                           
             # remove live user
             print " --> Removing live user"
@@ -311,7 +315,7 @@ class InstallerEngine(QtCore.QThread):
             self.update_progress(total=our_total, current=our_current, message="Writing filesystem mount information")
             # make sure fstab has default /proc and /sys entries
             if(not os.path.exists("/target/etc/fstab")):
-                os.system("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
+                self.do_run("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
             fstab = open("/target/etc/fstab", "a")
             fstab.write("proc\t/proc\tproc\tdefaults\t0\t0\n")
             for partition in setup.partitions:
@@ -374,9 +378,9 @@ class InstallerEngine(QtCore.QThread):
             print " --> Setting the locale"
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting locale")
-            os.system("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.locale_code)
+            self.do_run("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.locale_code)
             self.do_run_in_chroot("locale-gen")
-            os.system("echo \"\" > /target/etc/default/locale")
+            self.do_run("echo \"\" > /target/etc/default/locale")
             self.do_run_in_chroot("echo \"LANG=%s.UTF-8\" > /etc/locale.conf" % setup.locale_code)
             self.do_run_in_chroot("echo \"LC_TIME=%s.UTF-8\" >> /etc/locale.conf" % setup.locale_code)
 
@@ -384,7 +388,7 @@ class InstallerEngine(QtCore.QThread):
             print " --> Setting the timezone"
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting timezone")
-            os.system("echo \"%s\" > /target/etc/timezone" % setup.timezone_code)
+            self.do_run("echo \"%s\" > /target/etc/timezone" % setup.timezone_code)
             self.do_run_in_chroot("rm /etc/localtime")
             self.do_run_in_chroot("ln -s /usr/share/zoneinfo/%s /etc/localtime" % setup.timezone)
 
@@ -486,12 +490,12 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             print " --> Unmounting partitions"
             try:
-                os.system("umount --force /target/dev/shm")
-                os.system("umount --force /target/dev/pts")
-                os.system("umount --force /target/dev/")
-                os.system("umount --force /target/sys/")
-                os.system("umount --force /target/proc/")
-                os.system("rm -rf /target/etc/resolv.conf")
+                self.do_run("umount --force /target/dev/shm")
+                self.do_run("umount --force /target/dev/pts")
+                self.do_run("umount --force /target/dev/")
+                self.do_run("umount --force /target/sys/")
+                self.do_run("umount --force /target/proc/")
+                self.do_run("rm -rf /target/etc/resolv.conf")
                 for partition in setup.partitions:
                     if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
                         self.do_unmount("/target" + partition.mount_as)
@@ -504,6 +508,7 @@ class InstallerEngine(QtCore.QThread):
 
             self.update_progress(total=100, current=100, message="Installation finished")
             print " --> All done"
+
             self.emit(QtCore.SIGNAL("installFinished()"))
             self.exit(0)
             
@@ -511,15 +516,22 @@ class InstallerEngine(QtCore.QThread):
             print '-'*60
             traceback.print_exc(file=sys.stdout)
             print '-'*60
-    
+
+    def do_run(self, command):
+        os.system(command)
+        output = commands.getoutput(command)
+        self.update_progressTextEdit(output)
+
     def do_run_in_chroot(self, command):
-        os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
+        os.system("chroot /target/ /usr/bin/sh -c \"%s\"" % command)
+        output = commands.getoutput("chroot /target/ /usr/bin/sh -c \"%s\"" % command)
+        self.update_progressTextEdit(output)
         
     def do_configure_grub(self, our_total, our_current):
         self.update_progress(total=0, current=0, message="Configuring bootloader")
         print " --> Running grub-mkconfig"
         self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
-        grub_output = commands.getoutput("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
+        grub_output = commands.getoutput("chroot /target/ /usr/bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
         grubfh = open("/var/log/live-installer-grub-output.log", "w")
         grubfh.writelines(grub_output)
         grubfh.close()
