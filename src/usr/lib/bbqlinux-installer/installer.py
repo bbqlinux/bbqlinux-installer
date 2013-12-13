@@ -235,12 +235,32 @@ class InstallerEngine(QtCore.QThread):
             our_current = 0
             # chroot
             print " --> Chrooting"
-            self.update_progress(total=our_total, current=our_current, message="Entering new system..")            
+            self.update_progress(total=our_total, current=our_current, message="Entering new system..")
+
+            # setup mountpoints
+            if(not os.path.exists("/target/proc")):
+                os.mkdir("/target/proc")
+            self.do_run("mount -t proc proc /target/proc/")
+
+            if(not os.path.exists("/target/sys")):
+                os.mkdir("/target/sys")
+            self.do_run("mount -t sysfs sys /target/sys/")
+
+            if(not os.path.exists("/target/dev")):
+                os.mkdir("/target/dev")
             self.do_run("mount --bind /dev/ /target/dev/")
-            self.do_run("mount --bind /dev/shm /target/dev/shm")
-            self.do_run("mount --bind /dev/pts /target/dev/pts")
-            self.do_run("mount --bind /sys/ /target/sys/")
-            self.do_run("mount --bind /proc/ /target/proc/")
+
+            # shared memory
+            if(not os.path.exists("/target/dev/shm")):
+                os.mkdir("/target/dev/shm")
+            self.do_run("mount --bind /dev/shm/ /target/dev/shm/")
+
+            # important for pacman (for signature check)
+            if(not os.path.exists("/target/dev/pts")):
+                os.mkdir("/target/dev/pts")
+            self.do_run("mount -t devpts pts /target/dev/pts/")
+
+            # this is needed to use networking within the chroot
             self.do_run("cp -f /etc/resolv.conf /target/etc/resolv.conf")
                                           
             # remove live user
