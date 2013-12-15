@@ -1447,7 +1447,7 @@ class InstallerWindow(QtGui.QMainWindow):
         self.ui.installFootLabel.setText(message)
 
     def update_progressTextEdit(self, text=QtCore.QString("")):
-        self.ui.progressTextEdit.append(text)
+        self.ui.progressTextEdit.append(QtCore.QString.fromUtf8(text))
 
     def error_message(self, message, critical=False):
         if (critical == True):
