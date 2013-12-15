@@ -549,6 +549,10 @@ class InstallerEngine(QtCore.QThread):
         
     def do_configure_grub(self, our_total, our_current):
         self.update_progress(total=0, current=0, message="Configuring bootloader")
+
+        # Workaround for https://bugs.archlinux.org/task/37904
+        self.do_run_in_chroot("rm -f /etc/grub.d/10_linux")
+
         print " --> Running grub-mkconfig"
         self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
         grub_output = commands.getoutput("chroot /target/ /usr/bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
