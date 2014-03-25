@@ -279,9 +279,11 @@ class InstallerEngine(QtCore.QThread):
             print " --> Initializing pacman keyring"
             self.update_progress(total=0, current=0, message="Configuring Pacman")
             our_current += 1
+            self.do_run_in_chroot("rm -rf /etc/pacman.d/gnupg")
             self.do_run_in_chroot("pacman-key --init")
             self.do_run_in_chroot("pacman-key --populate archlinux")
             self.do_run_in_chroot("pacman-key --populate bbqlinux")
+            self.do_run_in_chroot("pacman-key --refresh-keys")
 
             # optimize mirrorlist
             our_current += 1
