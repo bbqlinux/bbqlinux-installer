@@ -445,9 +445,9 @@ class InstallerEngine(QtCore.QThread):
             for line in lightdmconfig:
                 line = line.rstrip("\r\n")
                 if(line.startswith("greeter-session=")):
-                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter\n")
+                    newlightdmconfig.write("greeter-session=lightdm-gtk-greeter\n")
                 elif(line.startswith("#greeter-session=")):
-                    newlightdmconfig.write("greeter-session=lightdm-bbqlinux-greeter\n")
+                    newlightdmconfig.write("greeter-session=lightdm-gtk-greeter\n")
                 else:
                     newlightdmconfig.write("%s\n" % line)
             lightdmconfig.close()
