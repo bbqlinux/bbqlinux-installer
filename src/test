@@ -5,7 +5,7 @@ sudo rm -rf /usr/bin/bbqlinux-installer
 sudo rm -rf /usr/lib/bbqlinux-installer
 sudo rm -rf /usr/share/bbqlinux-installer
 
-pyrcc4 -o usr/share/bbqlinux-installer/qt_resources_rc.py usr/share/bbqlinux-installer/qt_resources.qrc
+pyrcc5 -o usr/share/bbqlinux-installer/qt_resources_rc.py usr/share/bbqlinux-installer/qt_resources.qrc
 
 sudo cp -R usr /
 sudo cp -R etc /

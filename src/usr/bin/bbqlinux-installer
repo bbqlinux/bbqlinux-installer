@@ -1,3 +1,4 @@
 #!/bin/bash
 # Launch live-installer with all passed arguments (future reserved)
-/usr/bin/python2.7 -tt /usr/lib/bbqlinux-installer/main.py $*
+#/usr/bin/python2.7 -tt /usr/lib/bbqlinux-installer/main.py $*
+/usr/bin/python3 -tt /usr/lib/bbqlinux-installer/main.py --qmake /usr/lib/qt/bin/qmake $*

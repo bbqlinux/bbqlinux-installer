@@ -3,8 +3,7 @@ import sys
 sys.path.append('/usr/lib/bbqlinux-installer')
 sys.path.append('/usr/share/bbqlinux-installer')
 import os
-import commands
-import GeoIP
+import pygeoip
 import gettext
 import parted
 import string
@@ -13,14 +12,14 @@ import threading
 import time
 import traceback
 import urllib
-import urllib2
 import xml.dom.minidom
 from xml.dom.minidom import parse
 
 from installer import InstallerEngine, Setup, PartitionSetup
 from ui.qt_packageselector import PackageSelector
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtGui, QtCore, QtWidgets, uic
+from PyQt5.QtCore import QObject, pyqtSignal
 import qt_resources_rc
 
 INDEX_PARTITION_PATH = 0
@@ -31,7 +30,7 @@ INDEX_PARTITION_TYPE = 4
 INDEX_PARTITION_FORMAT_AS = 5
 INDEX_PARTITION_MOUNT_AS = 6
 
-class InstallerWindow(QtGui.QMainWindow):
+class InstallerWindow(QtWidgets.QMainWindow):
 
     PAGE_WELCOME = 0
     PAGE_LANGUAGE = 1
@@ -48,14 +47,14 @@ class InstallerWindow(QtGui.QMainWindow):
     resource_dir = '/usr/share/bbqlinux-installer/'
 
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
  
         self.ui = uic.loadUi('/usr/share/bbqlinux-installer/qt_interface.ui')
         self.ui.show()
 
         # Move main window to center
         qr = self.ui.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.ui.move(qr.topLeft())
 
@@ -67,10 +66,12 @@ class InstallerWindow(QtGui.QMainWindow):
         
         # Installer engine
         self.installer = InstallerEngine(self.setup)
-        self.connect(self.installer, QtCore.SIGNAL("progressUpdate(int, int, QString)"), self.update_progress)
-        self.connect(self.installer, QtCore.SIGNAL("progressUpdateTextEdit(QString)"), self.update_progressTextEdit)
-        self.connect(self.installer, QtCore.SIGNAL("errorMessage(QString, bool)"), self.error_message)
-        self.connect(self.installer, QtCore.SIGNAL("installFinished()"), self.install_finished)
+
+        # Signals
+        self.installer.update_progress_emit.connect(self.update_progress)
+        self.installer.update_progressTextEdit_emit.connect(self.update_progressTextEdit)
+        self.installer.error_message_emit.connect(self.error_message)
+        self.installer.install_finished_emit.connect(self.install_finished)
 
         # Get the distribution name
         self.DISTRIBUTION_NAME = self.installer.get_distribution_name()
@@ -83,18 +84,24 @@ class InstallerWindow(QtGui.QMainWindow):
 
         # Set window title
         self.ui.setWindowTitle("%s Installer - v%s" % (self.DISTRIBUTION_NAME, self.INSTALLER_VERSION))
-        self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
+        self.ui.headLabel.setText("Welcome to the %s installation" % self.DISTRIBUTION_NAME)
         
         # Connect the buttons
-        self.connect(self.ui.exitButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
-        self.connect(self.ui.backButton, QtCore.SIGNAL("clicked()"), self.backButton_clicked)
-        self.connect(self.ui.forwardButton, QtCore.SIGNAL("clicked()"), self.forwardButton_clicked)
+        #self.ui.exitButton.clicked.connect()
+        self.ui.backButton.clicked.connect(self.backButton_clicked)
+        self.ui.forwardButton.clicked.connect(self.forwardButton_clicked)
+        self.ui.refreshPartitionButton.clicked.connect(self.refreshPartitionButton_clicked)
+        self.ui.editPartitionButton.clicked.connect(self.editPartitionButton_clicked)
         
-        self.connect(self.ui.refreshPartitionButton, QtCore.SIGNAL("clicked()"), self.refreshPartitionButton_clicked)
-        self.connect(self.ui.editPartitionButton, QtCore.SIGNAL("clicked()"), self.editPartitionButton_clicked)
+        #self.connect(self.ui.exitButton, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
+        #self.connect(self.ui.backButton, QtCore.SIGNAL("clicked()"), self.backButton_clicked)
+        #self.connect(self.ui.forwardButton, QtCore.SIGNAL("clicked()"), self.forwardButton_clicked)
+        #self.connect(self.ui.refreshPartitionButton, QtCore.SIGNAL("clicked()"), self.refreshPartitionButton_clicked)
+        #self.connect(self.ui.editPartitionButton, QtCore.SIGNAL("clicked()"), self.editPartitionButton_clicked)       
 
         # Package selector button
-        self.connect(self.ui.packageSelectorButton, QtCore.SIGNAL("clicked()"), self.packageSelectorButton_clicked)
+        self.ui.packageSelectorButton.clicked.connect(self.packageSelectorButton_clicked)
+        #self.connect(self.ui.packageSelectorButton, QtCore.SIGNAL("clicked()"), self.packageSelectorButton_clicked)
         if (self.setup.internet_connectivity == True):
             self.ui.packageSelectorButton.setEnabled(True)
         else:
@@ -104,22 +111,30 @@ class InstallerWindow(QtGui.QMainWindow):
         self.setOverviewRadioButtons(self.PAGE_WELCOME)
         
         # Connect the language list
-        self.connect(self.ui.languageListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.languageListItem_clicked)
+        self.ui.languageListWidget.itemClicked.connect(self.languageListItem_clicked)
+        #self.connect(self.ui.languageListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.languageListItem_clicked)
         
         # Connect the timezone list
-        self.connect(self.ui.timezoneListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.timezoneListItem_clicked)
+        self.ui.timezoneListWidget.itemClicked.connect(self.timezoneListItem_clicked)
+        #self.connect(self.ui.timezoneListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.timezoneListItem_clicked)
 
         # Connect the keyboard tables
-        self.connect(self.ui.keyboardModelComboBox, QtCore.SIGNAL("activated(int)"), self.keyboardModelComboBox_activated)
-        self.connect(self.ui.keyboardLayoutTableWidget, QtCore.SIGNAL("itemClicked(QTableWidgetItem *)"), self.keyboardLayoutTableItem_clicked)
-        self.connect(self.ui.keyboardVariantTableWidget, QtCore.SIGNAL("itemClicked(QTableWidgetItem *)"), self.keyboardVariantTableItem_clicked)
+        self.ui.keyboardModelComboBox.activated.connect(self.keyboardModelComboBox_activated)
+        self.ui.keyboardLayoutTableWidget.itemClicked.connect(self.keyboardLayoutTableItem_clicked)
+        self.ui.keyboardVariantTableWidget.itemClicked.connect(self.keyboardVariantTableItem_clicked)
+        #self.connect(self.ui.keyboardModelComboBox, QtCore.SIGNAL("activated(int)"), self.keyboardModelComboBox_activated)
+        #self.connect(self.ui.keyboardLayoutTableWidget, QtCore.SIGNAL("itemClicked(QTableWidgetItem *)"), self.keyboardLayoutTableItem_clicked)
+        #self.connect(self.ui.keyboardVariantTableWidget, QtCore.SIGNAL("itemClicked(QTableWidgetItem *)"), self.keyboardVariantTableItem_clicked)
         
         # Connect the harddisk list
-        self.connect(self.ui.harddiskListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.harddiskListItem_clicked)
+        self.ui.harddiskListWidget.itemClicked.connect(self.harddiskListItem_clicked)
+        #self.connect(self.ui.harddiskListWidget, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.harddiskListItem_clicked)
 
         # Connect the bootloader combo boxes
-        self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
-        self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
+        self.ui.bootloaderTypeComboBox.activated.connect(self.bootloaderTypeComboBox_activated)
+        self.ui.bootloaderDeviceComboBox.activated.connect(self.bootloaderDeviceComboBox_activated)
+        #self.connect(self.ui.bootloaderTypeComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderTypeComboBox_activated)
+        #self.connect(self.ui.bootloaderDeviceComboBox, QtCore.SIGNAL("activated(int)"), self.bootloaderDeviceComboBox_activated)
 
     def backButton_clicked(self):
         ''' Jump one page back '''
@@ -207,7 +222,7 @@ class InstallerWindow(QtGui.QMainWindow):
                     elif action == setUsr:
                         self.assign_mount_point(partitionPathItem, "/usr", "ext4")
                     else:
-                        print "Invalid action"
+                        print("Invalid action")
 
     def assign_mount_point(self, partitionPathItem, mount_point, filesystem):
         row = partitionPathItem.row()
@@ -215,15 +230,15 @@ class InstallerWindow(QtGui.QMainWindow):
 
         # Mountpoint
         item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_MOUNT_AS)
-        item.setText(QtCore.QString(mount_point))
+        item.setText(mount_point)
         item.setTextAlignment(QtCore.Qt.AlignCenter)
-        item.setData(32, QtCore.QVariant(QtCore.QString(mount_point)))
+        item.setData(32, QtCore.QVariant(mount_point))
 
         # Filesystem
         item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_FORMAT_AS)
-        item.setText(QtCore.QString(filesystem))
+        item.setText(filesystem)
         item.setTextAlignment(QtCore.Qt.AlignCenter)
-        item.setData(32, QtCore.QVariant(QtCore.QString(filesystem)))
+        item.setData(32, QtCore.QVariant(filesystem))
         
         for apartition in self.setup.partitions:
             if (apartition.partition.path == partition_path):
@@ -232,15 +247,15 @@ class InstallerWindow(QtGui.QMainWindow):
             else:
                 # Unset items with same mountpoint
                 if apartition.mount_as == mount_point:
-                    match = self.ui.partitionTableWidget.findItems(QtCore.QString(apartition.partition.path), QtCore.Qt.MatchEndsWith)
+                    match = self.ui.partitionTableWidget.findItems(apartition.partition.path, QtCore.Qt.MatchEndsWith)
                     if len (match) != 0:
                         row = self.ui.partitionTableWidget.row(match[0])
                         item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_MOUNT_AS)
-                        item.setText(QtCore.QString("--"))
-                        item.setData(32, QtCore.QVariant(QtCore.QString("None")))
+                        item.setText("--")
+                        item.setData(32, QtCore.QVariant("None"))
                         item = self.ui.partitionTableWidget.item(row, INDEX_PARTITION_FORMAT_AS)
-                        item.setText(QtCore.QString("--"))
-                        item.setData(32, QtCore.QVariant(QtCore.QString("None")))
+                        item.setText("--")
+                        item.setData(32, QtCore.QVariant("None"))
                     apartition.mount_as = None
                     apartition.format_as = None
         self.setup.print_setup()
@@ -347,7 +362,7 @@ class InstallerWindow(QtGui.QMainWindow):
         if(len(keyboard_model) < 1):
             return
 
-        print "keyboard_model: %s" % keyboard_model
+        print("keyboard_model: %s" % keyboard_model)
 
         self.setup.keyboard_model = keyboard_model
         self.setup.keyboard_model_description = keyboard_model_description
@@ -362,8 +377,8 @@ class InstallerWindow(QtGui.QMainWindow):
         if(len(keyboard_layout) < 1):
             return
 
-        print "keyboard_layout: %s" % keyboard_layout
-        print "keyboard_layout_description: %s" % keyboard_layout_description
+        print("keyboard_layout: %s" % keyboard_layout)
+        print("keyboard_layout_description: %s" % keyboard_layout_description)
 
         self.setup.keyboard_layout = keyboard_layout
         self.setup.keyboard_layout_description = keyboard_layout_description
@@ -381,7 +396,7 @@ class InstallerWindow(QtGui.QMainWindow):
         if(len(keyboard_variant) < 1):
             return
 
-        print "keyboard_variant: %s" % keyboard_variant
+        print("keyboard_variant: %s" % keyboard_variant)
 
         self.setup.keyboard_variant = keyboard_variant
         self.setup.keyboard_variant_description = keyboard_variant_description
@@ -434,49 +449,49 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.pageStack.setCurrentIndex(index)
             if (index <= self.PAGE_WELCOME):
                 index = self.PAGE_WELCOME
-                self.ui.headLabel.setText(unicode("Welcome to the %s installation" % self.DISTRIBUTION_NAME))
+                self.ui.headLabel.setText("Welcome to the %s installation" % self.DISTRIBUTION_NAME)
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png"))
             elif (index is self.PAGE_LANGUAGE):
-                self.ui.headLabel.setText(unicode("Choose your language"))
+                self.ui.headLabel.setText("Choose your language")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/locales.png"))
                 self.build_language_list()
             elif (index is self.PAGE_TIMEZONE):
-                self.ui.headLabel.setText(unicode("Choose your timezone"))
+                self.ui.headLabel.setText("Choose your timezone")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/time.png"))
                 self.build_timezone_list()
             elif (index is self.PAGE_KEYBOARD):
-                self.ui.headLabel.setText(unicode("Choose your keyboard layout"))
+                self.ui.headLabel.setText("Choose your keyboard layout")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/keyboard.png"))
                 self.build_keyboard_lists()
             elif (index is self.PAGE_HARDDISK):
-                self.ui.headLabel.setText(unicode("Select Harddisk"))
+                self.ui.headLabel.setText("Select Harddisk")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_harddisks()
             elif (index is self.PAGE_PARTITION):
-                self.ui.headLabel.setText(unicode("Partition your harddisk"))
+                self.ui.headLabel.setText("Partition your harddisk")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/hdd.svg"))
                 self.build_partitions()
                 self.build_bootloader_partitions()
             elif (index is self.PAGE_ADVANCED):
-                self.ui.headLabel.setText(unicode("Advanced Settings"))
+                self.ui.headLabel.setText("Advanced Settings")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/advanced.png"))
                 self.build_bootloader_list()                
             elif (index is self.PAGE_USER):
-                self.ui.headLabel.setText(unicode("Create your user account"))
+                self.ui.headLabel.setText("Create your user account")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/user.png"))
 
                 # Username validator
-                rx = QtCore.QRegExp(QtCore.QString("^[a-z][a-z0-9]*$"))
+                rx = QtCore.QRegExp("^[a-z][a-z0-9]*$")
                 self.usernameValidator = QtGui.QRegExpValidator(rx)
                 self.ui.usernameLineEdit.setValidator(self.usernameValidator)
 
                 # Hostname validator
-                rx = QtCore.QRegExp(QtCore.QString("^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"))
+                rx = QtCore.QRegExp("^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$")
                 self.hostnameValidator = QtGui.QRegExpValidator(rx)
                 self.ui.hostnameLineEdit.setValidator(self.hostnameValidator)
 
             elif (index is self.PAGE_SUMMARY):
-                self.ui.headLabel.setText(unicode("Summary"))
+                self.ui.headLabel.setText("Summary")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/summary.png"))
 
                 summaryText = "Locale: %s\r\n" % self.setup.locale_code
@@ -507,7 +522,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 else:
                     self.ui.connectivityIcon.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/actions/dialog-no-2.png"))
             elif (index is self.PAGE_INSTALL):
-                self.ui.headLabel.setText(unicode("Installation"))
+                self.ui.headLabel.setText("Installation")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/icons/install.png"))
                 self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
@@ -515,7 +530,7 @@ class InstallerWindow(QtGui.QMainWindow):
                 rc = self.installer.start()
             elif (index >= self.PAGE_COMPLETE):
                 index = self.PAGE_COMPLETE
-                self.ui.headLabel.setText(unicode("Finished!"))
+                self.ui.headLabel.setText("Finished!")
                 self.ui.headLogo.setPixmap(QtGui.QPixmap("/usr/share/bbqlinux-installer/bbqlinux_icon_blue_32x32.png"))
                 self.ui.backButton.setEnabled(False)
                 self.ui.forwardButton.setEnabled(False)
@@ -613,9 +628,9 @@ class InstallerWindow(QtGui.QMainWindow):
                         flag_icon = QtGui.QIcon(flag_path)
 
                         # Append to list
-                        item = QtGui.QListWidgetItem(flag_icon, language_label)
-                        item.setData(32, QtCore.QVariant(QtCore.QString(locale_code)))
-                        item.setData(33, QtCore.QVariant(QtCore.QString(country_code)))
+                        item = QtWidgets.QListWidgetItem(flag_icon, language_label)
+                        item.setData(32, QtCore.QVariant(locale_code))
+                        item.setData(33, QtCore.QVariant(country_code))
                         self.ui.languageListWidget.addItem(item)
 
                         # If it's matching our country code, that's our language right there.. 
@@ -657,9 +672,9 @@ class InstallerWindow(QtGui.QMainWindow):
                 country_code = content[0]
                 timezone = content[1]
 
-            item = QtGui.QListWidgetItem(timezone)
-            item.setData(32, QtCore.QVariant(QtCore.QString(country_code)))
-            item.setData(33, QtCore.QVariant(QtCore.QString(timezone)))
+            item = QtWidgets.QListWidgetItem(timezone)
+            item.setData(32, QtCore.QVariant(country_code))
+            item.setData(33, QtCore.QVariant(timezone))
             self.ui.timezoneListWidget.addItem(item)
             
             # If user selected country matches timezone, choose it by default
@@ -677,22 +692,23 @@ class InstallerWindow(QtGui.QMainWindow):
         # firstly we'll determine the layouts in use
         p = subprocess.Popen("setxkbmap -print",shell=True,stdout=subprocess.PIPE)
         for line in p.stdout:
+            lineStr = str( line, encoding='utf8' )
             # strip it
-            line = line.rstrip("\r\n")
-            line = line.replace("{","")
-            line = line.replace("}","")
-            line = line.replace(";","")
-            if("xkb_symbols" in line):
+            lineStr = lineStr.rstrip("\r\n")
+            lineStr = lineStr.replace("{","")
+            lineStr = lineStr.replace("}","")
+            lineStr = lineStr.replace(";","")
+            if("xkb_symbols" in lineStr):
                 # decipher the layout in use
-                section = line.split("\"")[1] # split by the " mark
+                section = lineStr.split("\"")[1] # split by the " mark
                 layout = section.split("+")[1]
                 if "(" in layout:
                     self.setup.keyboard_layout = layout.split("(")[0]
                 else:
                     self.setup.keyboard_layout = layout
-            if("xkb_geometry" in line):
-                first_bracket = line.index("(") +1
-                substr = line[first_bracket:]
+            if("xkb_geometry" in lineStr):
+                first_bracket = lineStr.index("(") +1
+                substr = lineStr[first_bracket:]
                 last_bracket = substr.index(")")
                 substr = substr[0:last_bracket]
                 keyboard_geom = substr
@@ -715,9 +731,9 @@ class InstallerWindow(QtGui.QMainWindow):
             name = conf.getElementsByTagName('name')[0]
             desc = conf.getElementsByTagName('description')[0]
 
-            self.ui.keyboardModelComboBox.addItem(QtCore.QString(self.getText(desc.childNodes)))
-            self.ui.keyboardModelComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(self.getText(name.childNodes))), 32)
-            self.ui.keyboardModelComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(self.getText(desc.childNodes))), 33)
+            self.ui.keyboardModelComboBox.addItem(self.getText(desc.childNodes))
+            self.ui.keyboardModelComboBox.setItemData(cur_index, QtCore.QVariant(self.getText(name.childNodes)), 32)
+            self.ui.keyboardModelComboBox.setItemData(cur_index, QtCore.QVariant(self.getText(desc.childNodes)), 33)
             
             item = self.getText(name.childNodes)
             if(item == keyboard_geom):
@@ -743,9 +759,9 @@ class InstallerWindow(QtGui.QMainWindow):
             self.ui.keyboardLayoutTableWidget.verticalHeader().setVisible(False)
             self.ui.keyboardLayoutTableWidget.sortItems(0, 0)
             self.ui.keyboardLayoutTableWidget.insertRow(row)
-            tableItem = QtGui.QTableWidgetItem(QtCore.QString(self.getText(desc.childNodes)))            
-            tableItem.setData(32, QtCore.QVariant(QtCore.QString(self.getText(name.childNodes))))
-            tableItem.setData(33, QtCore.QVariant(QtCore.QString(self.getText(desc.childNodes))))
+            tableItem = QtWidgets.QTableWidgetItem(self.getText(desc.childNodes))    
+            tableItem.setData(32, QtCore.QVariant(self.getText(name.childNodes)))
+            tableItem.setData(33, QtCore.QVariant(self.getText(desc.childNodes)))
             self.ui.keyboardLayoutTableWidget.setItem(row, 0, tableItem)
             item = self.getText(name.childNodes)
             if(item == self.setup.keyboard_layout):
@@ -753,10 +769,10 @@ class InstallerWindow(QtGui.QMainWindow):
                 self.setup.keyboard_layout_description = self.getText(desc.childNodes)
 
         if (not set_item is None):
-            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtGui.QAbstractItemView.PositionAtCenter)
+            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtWidgets.QAbstractItemView.PositionAtCenter)
             set_item.setSelected(True)
             # Since the first scrollToItem doesn't work, do it again
-            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtGui.QAbstractItemView.PositionAtCenter)
+            self.ui.keyboardLayoutTableWidget.scrollToItem(set_item, QtWidgets.QAbstractItemView.PositionAtCenter)
 
         self.build_keyboard_variant_list()
 
@@ -764,14 +780,15 @@ class InstallerWindow(QtGui.QMainWindow):
         # firstly we'll determine the layouts in use
         p = subprocess.Popen("setxkbmap -print",shell=True,stdout=subprocess.PIPE)
         for line in p.stdout:
+            lineStr = str( line, encoding='utf8' )
             # strip it
-            line = line.rstrip("\r\n")
-            line = line.replace("{","")
-            line = line.replace("}","")
-            line = line.replace(";","")
-            if("xkb_symbols" in line):
+            lineStr = lineStr.rstrip("\r\n")
+            lineStr = lineStr.replace("{","")
+            lineStr = lineStr.replace("}","")
+            lineStr = lineStr.replace(";","")
+            if("xkb_symbols" in lineStr):
                 # decipher the layout in use
-                section = line.split("\"")[1] # split by the " mark
+                section = lineStr.split("\"")[1] # split by the " mark
                 layout = section.split("+")[1]
                 if "(" in layout:
                     self.setup.keyboard_layout = layout.split("(")[0]
@@ -799,9 +816,9 @@ class InstallerWindow(QtGui.QMainWindow):
             if (layout_name == self.setup.keyboard_layout):
                 row += 1           
                 self.ui.keyboardVariantTableWidget.insertRow(row)
-                tableItem = QtGui.QTableWidgetItem(QtCore.QString(layout_description))
-                tableItem.setData(32, QtCore.QVariant(QtCore.QString("")))
-                tableItem.setData(33, QtCore.QVariant(QtCore.QString(layout_description)))
+                tableItem = QtWidgets.QTableWidgetItem(layout_description)
+                tableItem.setData(32, QtCore.QVariant(""))
+                tableItem.setData(33, QtCore.QVariant(layout_description))
                 self.ui.keyboardVariantTableWidget.setItem(row, 0, tableItem)
                 tableItem.setSelected(True)
 
@@ -818,9 +835,9 @@ class InstallerWindow(QtGui.QMainWindow):
                         variant_description = "%s - %s" % (layout_description, self.getText(variant_conf.getElementsByTagName('description')[0].childNodes))
 
                         self.ui.keyboardVariantTableWidget.insertRow(row)
-                        tableItem = QtGui.QTableWidgetItem(QtCore.QString(variant_description))
-                        tableItem.setData(32, QtCore.QVariant(QtCore.QString(variant_name)))
-                        tableItem.setData(33, QtCore.QVariant(QtCore.QString(variant_description)))
+                        tableItem = QtWidgets.QTableWidgetItem(variant_description)
+                        tableItem.setData(32, QtCore.QVariant(variant_name))
+                        tableItem.setData(33, QtCore.QVariant(variant_description))
                         self.ui.keyboardVariantTableWidget.setItem(row, 0, tableItem)
                 break
 
@@ -831,14 +848,15 @@ class InstallerWindow(QtGui.QMainWindow):
         # Clear the list
         self.ui.harddiskListWidget.clear()
         for line in inxi.stdout:
-            line = line.rstrip("\r\n")
-            if(line.startswith("Drives:")):
-                line = line.replace("Drives:", "")
-            if "model:" in line: 
-                line = line.replace("model:", "")
-            if "size:" in line: 
-                line = line.replace("size:", "")
-            sections = line.split(":")
+            lineStr = str( line, encoding='utf8' )
+            lineStr = lineStr.rstrip("\r\n")
+            if(lineStr.startswith("Drives:")):
+                lineStr = lineStr.replace("Drives:", "")
+            if "model:" in lineStr: 
+                lineStr = lineStr.replace("model:", "")
+            if "size:" in lineStr: 
+                lineStr = lineStr.replace("size:", "")
+            sections = lineStr.split(":")
             for section in sections:
                 section = section.strip()
                 if("/dev/" in section):                    
@@ -848,8 +866,8 @@ class InstallerWindow(QtGui.QMainWindow):
                             description = elements[+1]
                             size = elements[+2]
                             self.setup.disks.append(element)
-                            item = QtGui.QListWidgetItem("%s (%s, %s)" % (element, size, description))
-                            item.setData(32, QtCore.QVariant(QtCore.QString(element)))
+                            item = QtWidgets.QListWidgetItem("%s (%s, %s)" % (element, size, description))
+                            item.setData(32, QtCore.QVariant(element))
                             self.ui.harddiskListWidget.addItem(item)
                             if (set_item is None):
                                 self.setup.target_disk = element
@@ -866,7 +884,7 @@ class InstallerWindow(QtGui.QMainWindow):
         for _range in regions:
             if (_range.getSize() > free_max.getSize()):
                 free_max = _range
-        print "Max free space region %d-%d (%dMB)" % (free_max.start, free_max.end, free_max.getSize())
+        print("Max free space region %d-%d (%dMB)" % (free_max.start, free_max.end, free_max.getSize()))
         return free_max
 
     def getBestFreeSpaceRegion(self, disk, req_size):
@@ -882,10 +900,10 @@ class InstallerWindow(QtGui.QMainWindow):
                 if (_range.getSize() < best_free.getSize()):
                     best_free = _range
 
-            print "Best free space region %d-%d (%dMB)" % (best_free.start, best_free.end, best_free.getSize())
+            print("Best free space region %d-%d (%dMB)" % (best_free.start, best_free.end, best_free.getSize()))
             return best_free
         else:
-            print "There's no suitable free space region"
+            print("There's no suitable free space region")
             return None
 
     def build_partitions(self):           
@@ -973,8 +991,8 @@ class InstallerWindow(QtGui.QMainWindow):
                         if len(regions) > 0:
                             region = regions[-1]  
                             start = end + 1
-                            ram_size = int(commands.getoutput("cat /proc/meminfo | grep MemTotal | awk {'print $2'}")) # in KiB
-                            if(ram_size > 2097152):
+                            ram_size = int(subprocess.check_output("cat /proc/meminfo | grep MemTotal | awk {'print $2'}", shell=True)) # in KiB
+                            if ram_size > 2097152:
                                 ram_size = 2097152
                             num_sectors = parted.sizeToSectors(ram_size, "KiB", device.sectorSize)
                             num_sectors = int(float(num_sectors) * 1.5) # Swap is 1.5 times bigger than RAM but never bigger than 3GB
@@ -1044,7 +1062,7 @@ class InstallerWindow(QtGui.QMainWindow):
                         return
                     else:
                         # Do nothing... just get out of here..
-                        print "No partition table created!"
+                        print("No partition table created!")
                         raise
                 partition = disk.getFirstPartition()
                 last_added_partition = PartitionSetup(partition)
@@ -1068,16 +1086,16 @@ class InstallerWindow(QtGui.QMainWindow):
 
                         if partition.number != -1 and "swap" not in last_added_partition.type and partition.type != parted.PARTITION_EXTENDED:
                             # Umount temp folder
-                            if ('/tmp/bbqlinux-installer/tmpmount' in commands.getoutput('mount')):
+                            if ('/tmp/bbqlinux-installer/tmpmount' in str(subprocess.check_output("mount", shell=True), encoding='utf8')):
                                 os.popen('umount /tmp/bbqlinux-installer/tmpmount')
 
                             # Mount partition if not mounted
-                            if (partition.path not in commands.getoutput('mount')):                                
+                            if (partition.path not in str(subprocess.check_output("mount", shell=True), encoding='utf8')):                                
                                 os.system("mount %s /tmp/bbqlinux-installer/tmpmount" % partition.path)
 
                             # Get filesystem label
                             blkid_start = 0
-                            blkid_lines = commands.getoutput("blkid %s" % partition.path)
+                            blkid_lines = str(subprocess.check_output("blkid %s" % partition.path, shell=True), encoding='utf8')
                             if "PARTLABEL=" in blkid_lines:
                                 blkid_start = blkid_lines.find('PARTLABEL="') + 11
                             elif "LABEL=" in blkid_lines:
@@ -1090,8 +1108,8 @@ class InstallerWindow(QtGui.QMainWindow):
                                 last_added_partition.label = "undefined"
 
                             # Identify partition's description and used space
-                            if (partition.path in commands.getoutput('mount')):
-                                df_lines = commands.getoutput("df 2>/dev/null | grep %s" % partition.path).split('\n')
+                            if (partition.path in str(subprocess.check_output("mount", shell=True), encoding='utf8')):
+                                df_lines = str(subprocess.check_output("df 2>/dev/null | grep %s" % partition.path, shell=True), encoding='utf8').split('\n')
                                 for df_line in df_lines:
                                     df_elements = df_line.split()
                                     if df_elements[0] == partition.path:
@@ -1102,13 +1120,13 @@ class InstallerWindow(QtGui.QMainWindow):
                                             last_added_partition.free_space = int(float(last_added_partition.size) * (float(100) - float(used_space_pct)) / float(100))
                                                                             
                                         if os.path.exists(os.path.join(mount_point, 'etc/lsb-release')):
-                                            last_added_partition.description = commands.getoutput("cat " + os.path.join(mount_point, 'etc/lsb-release') + " | grep DISTRIB_DESCRIPTION").replace('DISTRIB_DESCRIPTION', '').replace('=', '').replace('"', '').strip()                                    
+                                            last_added_partition.description = subprocess.check_output("cat " + os.path.join(mount_point, 'etc/lsb-release') + " | grep DISTRIB_DESCRIPTION", shell=True).replace('DISTRIB_DESCRIPTION', '').replace('=', '').replace('"', '').strip()                                    
                                         if os.path.exists(os.path.join(mount_point, 'etc/issue')):
-                                            last_added_partition.description = commands.getoutput("cat " + os.path.join(mount_point, 'etc/issue')).replace('\r', '').replace('\\n', '').replace('\l', '').replace('()', '').strip()
+                                            last_added_partition.description = subprocess.check_output("cat " + os.path.join(mount_point, 'etc/issue'), shell=True).replace('\r', '').replace('\\n', '').replace('\l', '').replace('()', '').strip()
                                         if os.path.exists(os.path.join(mount_point, 'etc/bbqlinux-version')):
                                             last_added_partition.description = "BBQLinux"
                                         if os.path.exists(os.path.join(mount_point, 'Windows/servicing/Version')):
-                                            version = commands.getoutput("ls %s" % os.path.join(mount_point, 'Windows/servicing/Version'))
+                                            version = subprocess.check_output("ls %s" % os.path.join(mount_point, 'Windows/servicing/Version'), shell=True)
                                             if version.startswith("6.2"):
                                                 last_added_partition.description = "Windows 8"
                                             elif version.startswith("6.1"):
@@ -1144,10 +1162,10 @@ class InstallerWindow(QtGui.QMainWindow):
                                             last_added_partition.description = "Windows"
                                         break
                             else:
-                                print "Failed to mount %s" % partition.path
+                                print("Failed to mount %s" % partition.path)
 
                             # Umount temp folder
-                            if ('/tmp/bbqlinux-installer/tmpmount' in commands.getoutput('mount')):
+                            if ('/tmp/bbqlinux-installer/tmpmount' in str(subprocess.check_output('mount', shell=True), encoding='utf8')):
                                 os.popen('umount /tmp/bbqlinux-installer/tmpmount')
                                 
                     if last_added_partition.size > 1.0:
@@ -1162,8 +1180,8 @@ class InstallerWindow(QtGui.QMainWindow):
                         self.ui.partitionTableWidget.insertRow(row)
 
                         # Display name
-                        tableItem = QtGui.QTableWidgetItem(QtCore.QString(display_name))
-                        tableItem.setData(32, QtCore.QVariant(QtCore.QString(last_added_partition.partition.path)))
+                        tableItem = QtWidgets.QTableWidgetItem(display_name)
+                        tableItem.setData(32, QtCore.QVariant(last_added_partition.partition.path))
                         self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_PATH, tableItem)
 
                         # Size
@@ -1172,7 +1190,7 @@ class InstallerWindow(QtGui.QMainWindow):
                         else:
                             size = "%.0f MB" % round(last_added_partition.size, 0)
 
-                        tableItem = QtGui.QTableWidgetItem(QtCore.QString(size))
+                        tableItem = QtWidgets.QTableWidgetItem(size)
                         tableItem.setTextAlignment(QtCore.Qt.AlignRight)
                         self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_SIZE, tableItem)      
 
@@ -1184,20 +1202,20 @@ class InstallerWindow(QtGui.QMainWindow):
                             else:
                                 free = "%.0f MB" % round(last_added_partition.free_space, 0)
                         
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString(free))
+                            tableItem = QtWidgets.QTableWidgetItem(free)
                             tableItem.setTextAlignment(QtCore.Qt.AlignRight)
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_FREE_SPACE, tableItem)
 
                         # Type
                         if last_added_partition.partition.number == -1:                     
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString(last_added_partition.type))
+                            tableItem = QtWidgets.QTableWidgetItem(last_added_partition.type)
                             tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
-                            tableItem.setData(32, QtCore.QVariant(QtCore.QString(last_added_partition.type)))
+                            tableItem.setData(32, QtCore.QVariant(last_added_partition.type))
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_TYPE, tableItem)                          
                         elif last_added_partition.partition.type == parted.PARTITION_EXTENDED:                    
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString("Extended"))
+                            tableItem = QtWidgets.QTableWidgetItem("Extended")
                             tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
-                            tableItem.setData(32, QtCore.QVariant(QtCore.QString("Extended")))
+                            tableItem.setData(32, QtCore.QVariant("Extended"))
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_TYPE, tableItem)                          
                         else:                                        
                             if last_added_partition.type == "ntfs":
@@ -1211,33 +1229,33 @@ class InstallerWindow(QtGui.QMainWindow):
                             elif last_added_partition.type in ["linux-swap", "swap"]:
                                 color = "#c1665a"
                                 last_added_partition.mount_as = "swap"
-                                tableItem = QtGui.QTableWidgetItem(QtCore.QString("swap"))
+                                tableItem = QtWidgets.QTableWidgetItem("swap")
                                 tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
-                                tableItem.setData(32, QtCore.QVariant(QtCore.QString("swap")))
+                                tableItem.setData(32, QtCore.QVariant("swap"))
                                 self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_MOUNT_AS, tableItem)
                             else:
                                 color = "#a9a9a9"
 
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString(last_added_partition.type))
+                            tableItem = QtWidgets.QTableWidgetItem(last_added_partition.type)
                             tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
                             tableItem.setTextColor(QtGui.QColor(color))
-                            tableItem.setData(32, QtCore.QVariant(QtCore.QString(last_added_partition.type)))
+                            tableItem.setData(32, QtCore.QVariant(last_added_partition.type))
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_TYPE, tableItem)   
 
                         # Format as
-                        tableItem = QtGui.QTableWidgetItem(QtCore.QString("--"))
+                        tableItem = QtWidgets.QTableWidgetItem("--")
                         tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
                         self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_FORMAT_AS, tableItem)
 
                         # Operating system
-                        tableItem = QtGui.QTableWidgetItem(QtCore.QString(last_added_partition.description))
+                        tableItem = QtWidgets.QTableWidgetItem(last_added_partition.description)
                         self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_DESCRIPTION, tableItem)
 
                         # Mountpoint
                         if last_added_partition.type in ["linux-swap", "swap"]:
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString("swap"))
+                            tableItem = QtWidgets.QTableWidgetItem("swap")
                         else:
-                            tableItem = QtGui.QTableWidgetItem(QtCore.QString("--"))
+                            tableItem = QtWidgets.QTableWidgetItem("--")
                             tableItem.setTextAlignment(QtCore.Qt.AlignCenter)
                             self.ui.partitionTableWidget.setItem(row, INDEX_PARTITION_MOUNT_AS, tableItem)
 
@@ -1271,9 +1289,9 @@ class InstallerWindow(QtGui.QMainWindow):
                     partition = partition.nextPartition()
 
         except Exception:
-            print '-'*60
+            print('-'*60)
             traceback.print_exc(file=sys.stdout)
-            print '-'*60
+            print('-'*60)
 
     def verify_partitions(self):
         # check for /boot/efi on efi systems
@@ -1324,8 +1342,8 @@ class InstallerWindow(QtGui.QMainWindow):
         #    bootloader_type = "grub-bios"
         bootloader_type = "grub"
         cur_index += 1
-        self.ui.bootloaderTypeComboBox.addItem(QtCore.QString(bootloader_type))
-        self.ui.bootloaderTypeComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(bootloader_type)), 32)
+        self.ui.bootloaderTypeComboBox.addItem(bootloader_type)
+        self.ui.bootloaderTypeComboBox.setItemData(cur_index, QtCore.QVariant(bootloader_type), 32)
         self.setup.bootloader_type = bootloader_type
         self.setup.print_setup()
         
@@ -1335,29 +1353,29 @@ class InstallerWindow(QtGui.QMainWindow):
         set_index = None
         if (self.setup.bios_type == "efi"):
             cur_index += 1
-            self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString("/boot/efi"))
-            self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("/boot/efi")), 32)
+            self.ui.bootloaderDeviceComboBox.addItem("/boot/efi")
+            self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant("/boot/efi"), 32)
             self.setup.bootloader_device = "/boot/efi"
         else:
             # Add disks
             for disk in self.setup.disks:
                 cur_index += 1
-                self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString(disk))
-                self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(disk)), 32)
+                self.ui.bootloaderDeviceComboBox.addItem(disk)
+                self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(disk), 32)
                 if (disk == self.setup.target_disk):
                     set_index = cur_index
                     self.setup.bootloader_device = disk
             # Add partitions
-            partitions = commands.getoutput("fdisk -l | grep ^/dev/").split("\n")
+            partitions = subprocess.check_output("fdisk -l | grep ^/dev/", shell=True).split("\n")
             for partition in partitions:
                 try:
                     partition = partition.split()[0].strip()
                     if partition.startswith("/dev/"):
                         cur_index += 1
-                        self.ui.bootloaderDeviceComboBox.addItem(QtCore.QString(partition))
-                        self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(partition)), 32)
-                except Exception, detail:
-                    print detail
+                        self.ui.bootloaderDeviceComboBox.addItem(partition)
+                        self.ui.bootloaderDeviceComboBox.setItemData(cur_index, QtCore.QVariant(partition), 32)
+                except Exception as detail:
+                    print(detail)
             # If we found the target disk, select it
             if (not set_index is None):
                 self.ui.bootloaderDeviceComboBox.setCurrentIndex(set_index)
@@ -1378,7 +1396,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
         username_error = True
         username = str(self.ui.usernameLineEdit.text())
-        if (self.usernameValidator.validate(QtCore.QString(username), pos) != (QtGui.QValidator.Acceptable, pos) or len(username) < 1):
+        if (self.usernameValidator.validate(username, pos) != (QtGui.QValidator.Acceptable, pos) or len(username) < 1):
             username_error = True
             self.ui.usernameLineEdit.setStyleSheet("border: 1px solid red");
             MessageDialog("Username error", "Please enter a valid username").show()
@@ -1408,7 +1426,7 @@ class InstallerWindow(QtGui.QMainWindow):
 
         hostname_error = True
         hostname = str(self.ui.hostnameLineEdit.text())
-        if (self.hostnameValidator.validate(QtCore.QString(hostname), pos) != (QtGui.QValidator.Acceptable, pos) or len(hostname) < 1):
+        if (self.hostnameValidator.validate(hostname, pos) != (QtGui.QValidator.Acceptable, pos) or len(hostname) < 1):
             hostname_error = True
             self.ui.hostnameLineEdit.setStyleSheet("border: 1px solid red")
             MessageDialog("Hostname error", "Please enter a valid hostname").show()
@@ -1430,24 +1448,24 @@ class InstallerWindow(QtGui.QMainWindow):
     def check_connectivity(self):
         # check for internet connectivity
         try:
-            con = urllib2.urlopen("http://www.bbqlinux.org")
+            con = urllib.urlopen("http://www.bbqlinux.org")
             data = con.read()
             return True
         except:
             try:
-                con = urllib2.urlopen("http://www.archlinux.org")
+                con = urllib.urlopen("http://www.archlinux.org")
                 data = con.read()
                 return True
             except:
                 return False
 
-    def update_progress(self, total=0, current=0, message=QtCore.QString("")):
+    def update_progress(self, total=0, current=0, message=""):
         self.ui.installProgressBar.setMaximum(total)
         self.ui.installProgressBar.setValue(current)
         self.ui.installFootLabel.setText(message)
 
-    def update_progressTextEdit(self, text=QtCore.QString("")):
-        self.ui.progressTextEdit.append(QtCore.QString.fromUtf8(text))
+    def update_progressTextEdit(self, text=""):
+        self.ui.progressTextEdit.append(text)
 
     def error_message(self, message, critical=False):
         if (critical == True):
@@ -1460,8 +1478,8 @@ class InstallerWindow(QtGui.QMainWindow):
 
 class QuestionDialog(object):
     def __init__(self, title, message):
-        self.title = QtCore.QString(title)
-        self.message = QtCore.QString(message)
+        self.title = title
+        self.message = message
 
     ''' Show me on screen '''
     def show(self):
@@ -1474,8 +1492,8 @@ class QuestionDialog(object):
 
 class MessageDialog(object):
     def __init__(self, title, message):
-        self.title = QtCore.QString(title)
-        self.message = QtCore.QString(message)
+        self.title = title
+        self.message = message
 
     ''' Show me on screen '''
     def show(self):
@@ -1485,14 +1503,14 @@ class MessageDialog(object):
 class PartitionEditDialog(object):
     def __init__(self, base, partition_path, format_as, mount_point):       
         self.partitionEditBox = uic.loadUi('/usr/share/bbqlinux-installer/qt_partition_edit_dialog.ui')
-        self.partitionEditBox.partitionLabel.setText(QtCore.QString(partition_path))
+        self.partitionEditBox.partitionLabel.setText(partition_path)
 
         # Mountpoint
         if (len(mount_point) > 0):
-            self.partitionEditBox.mountpointLineEdit.setText(QtCore.QString(mount_point))
+            self.partitionEditBox.mountpointLineEdit.setText(mount_point)
 
         # Check for valid linux path
-        rx = QtCore.QRegExp(QtCore.QString("^/(?:[a-zA-Z0-9_\-]+/?)*$"))
+        rx = QtCore.QRegExp("^/(?:[a-zA-Z0-9_\-]+/?)*$")
         self.validator = QtGui.QRegExpValidator(rx)
         self.partitionEditBox.mountpointLineEdit.setValidator(self.validator)
 
@@ -1501,26 +1519,26 @@ class PartitionEditDialog(object):
         set_index = None
         ''' Build supported filesystems list '''
         if "swap" in format_as:        
-            self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("swap"))
-            self.partitionEditBox.filesystemComboBox.setItemData(0, QtCore.QVariant(QtCore.QString("swap")), 32)
+            self.partitionEditBox.filesystemComboBox.addItem("swap")
+            self.partitionEditBox.filesystemComboBox.setItemData(0, QtCore.QVariant("swap"), 32)
         else:
             try:
                 cur_index += 1
-                self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("None"))
-                self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("None")), 32)
+                self.partitionEditBox.filesystemComboBox.addItem("None")
+                self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant("None"), 32)
                 for item in os.listdir("/usr/bin"):
                     if(item.startswith("mkfs.")):
                         cur_index += 1
                         fstype = item.split(".")[1]
-                        self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString(fstype))
-                        self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(fstype)), 32)
+                        self.partitionEditBox.filesystemComboBox.addItem(fstype)
+                        self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(fstype), 32)
                         if(format_as == fstype):
                             set_index = cur_index
             except Exception:
-                print '-'*60
+                print('-'*60)
                 traceback.print_exc(file=sys.stdout)
-                print '-'*60
-                print "Could not build supported filesystems list!"
+                print('-'*60)
+                print("Could not build supported filesystems list!")
         
         # If we've found the current fstype, select it
         if (not set_index is None):
@@ -1552,7 +1570,7 @@ class PartitionEditDialog(object):
 
         if (len(mount_as) > 0 and len(format_as) > 0):
             pos = 0
-            if (self.validator.validate(QtCore.QString(mount_as), pos) == (QtGui.QValidator.Acceptable, pos)):
+            if (self.validator.validate(mount_as, pos) == (QtGui.QValidator.Acceptable, pos)):
                 self.mount_as = mount_as
                 self.format_as = format_as
                 self.partitionEditBox.done(0)

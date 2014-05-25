@@ -5,13 +5,13 @@ import shutil
 import gettext
 import stat
 import traceback
-import commands
 import sys
 import parted
 
 from subprocess import Popen
 from configobj import ConfigObj
-from PyQt4 import QtCore
+from PyQt5 import QtCore
+from PyQt5.QtCore import QObject, pyqtSignal
 
 class InstallerEngine(QtCore.QThread):
     ''' This is central to the bbqlinux installer '''
@@ -34,14 +34,11 @@ class InstallerEngine(QtCore.QThread):
     def run(self):
         self.install(self.setup)
 
-    def update_progress(self, total, current, message):
-        self.emit(QtCore.SIGNAL("progressUpdate(int, int, QString)"), total, current, QtCore.QString(message))
-
-    def update_progressTextEdit(self, text):
-        self.emit(QtCore.SIGNAL("progressUpdateTextEdit(QString)"), QtCore.QString(text))
-
-    def error_message(self, message, critical=False):
-        self.emit(QtCore.SIGNAL("errorMessage(QString, bool)"), message, critical)
+    # Signals
+    update_progress_emit = pyqtSignal(int, int, str, name='updateProgress')
+    update_progressTextEdit_emit = pyqtSignal(str, name='updateProgressTextEdit')
+    error_message_emit = pyqtSignal(str, bool, name='errorMessage')
+    install_finished_emit = pyqtSignal()
 
     def get_distribution_name(self):
         return self.distribution_name
@@ -73,16 +70,16 @@ class InstallerEngine(QtCore.QThread):
                     else:
                         cmd = "mkfs.%s %s" % (partition.format_as, partition.partition.path) # works with bfs, btrfs, ext2, ext3, ext4, minix, msdos, ntfs
 					
-                print "EXECUTING: '%s'" % cmd
+                print("EXECUTING: '%s'" % cmd)
                 p = Popen(cmd, shell=True)
                 p.wait() # this blocks
                 partition.type = partition.format_as
                                         
     def step_mount_partitions(self, setup):
         # Mount the installation media
-        print " --> Mounting partitions"
+        print(" --> Mounting partitions")
         self.update_progress(total=3, current=2, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':self.root_image, 'mountpoint':"/source/rootfs/"})
-        print " ------ Mounting %s on %s" % (self.root_image, "/source/rootfs/")
+        print(" ------ Mounting %s on %s" % (self.root_image, "/source/rootfs/"))
         self.do_mount(self.root_image, "/source/rootfs/", self.root_image_type, options="loop")
         
         # Mount the target partition
@@ -94,7 +91,7 @@ class InstallerEngine(QtCore.QThread):
             if(partition.mount_as is not None and partition.mount_as != ""):   
                   if partition.mount_as == "/":
                         self.update_progress(total=3, current=3, message="Mounting %(partition)s on %(mountpoint)s" % {'partition':partition.partition.path, 'mountpoint':"/target/"})
-                        print " ------ Mounting %s on %s" % (partition.partition.path, "/target/")
+                        print(" ------ Mounting %s on %s" % (partition.partition.path, "/target/"))
                         self.do_mount(partition.partition.path, "/target", partition.type, None)
                         break
         
@@ -107,7 +104,7 @@ class InstallerEngine(QtCore.QThread):
                     partition.type = "vfat"
                 if(partition.mount_as is not None and partition.mount_as != ""):   
                     if partition.mount_as == "/boot":
-                            print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
+                            print(" ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as))
                             self.do_run("mkdir -p /target" + partition.mount_as)
                             self.do_mount(partition.partition.path, "/target" + partition.mount_as, partition.type, None)
         
@@ -118,7 +115,7 @@ class InstallerEngine(QtCore.QThread):
             if(partition.type == "fat32"):
                 partition.type = "vfat"
             if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
-                print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
+                print(" ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as))
                 self.do_run("mkdir -p /target" + partition.mount_as)
                 # If the partition type is unknown, try auto
                 if ((partition.type == "None") or (partition.type == "Unknown")):
@@ -132,12 +129,12 @@ class InstallerEngine(QtCore.QThread):
         our_current = -1
         os.chdir(source)
         # index the files
-        print " --> Indexing files"
+        print(" --> Indexing files")
         for top,dirs,files in os.walk(source, topdown=False):
             our_total += len(dirs) + len(files)
             self.update_progress(total=0, current=0, message="Indexing files to be copied..")
         our_total += 1 # safenessness
-        print " --> Copying files"
+        print(" --> Copying files")
         for top,dirs,files in os.walk(source):
             # Sanity check. Python is a bit schitzo
             dirpath = top
@@ -191,7 +188,7 @@ class InstallerEngine(QtCore.QThread):
                     os.utime(targetpath, (st.st_atime, st.st_mtime))
         # Apply timestamps to all directories now that the items within them
         # have been copied.
-        print " --> Restoring meta-info"
+        print(" --> Restoring meta-info")
         for dirtime in directory_times:
             (directory, atime, mtime) = dirtime
             try:
@@ -203,7 +200,7 @@ class InstallerEngine(QtCore.QThread):
 
     def install(self, setup):
         # mount the media location.
-        print " --> Installation started"
+        print(" --> Installation started")
         try:
             # create target dir
             if(not os.path.exists("/target")):
@@ -217,7 +214,7 @@ class InstallerEngine(QtCore.QThread):
 
             # find the source images..
             if(not os.path.exists(self.root_image)):
-                print "The base filesystem does not exist! Critical error (exiting)."
+                print("The base filesystem does not exist! Critical error (exiting).")
                 self.error_message(message="The source image doesn't exist! Aborting!", critical=True)
                 self.exit(1)
 
@@ -234,7 +231,7 @@ class InstallerEngine(QtCore.QThread):
             our_total = 15
             our_current = 0
             # chroot
-            print " --> Chrooting"
+            print(" --> Chrooting")
             self.update_progress(total=our_total, current=our_current, message="Entering new system..")
 
             # setup mountpoints
@@ -264,7 +261,7 @@ class InstallerEngine(QtCore.QThread):
             self.do_run("cp -f /etc/resolv.conf /target/etc/resolv.conf")
                                           
             # remove live user
-            print " --> Removing live user"
+            print(" --> Removing live user")
             live_user = self.live_user
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Removing live configuration (user)")
@@ -276,7 +273,7 @@ class InstallerEngine(QtCore.QThread):
                 self.do_run_in_chroot("rm -rf /home/%s" % live_user)
             
             # initialize pacman keyring
-            print " --> Initializing pacman keyring"
+            print(" --> Initializing pacman keyring")
             self.update_progress(total=0, current=0, message="Configuring Pacman")
             our_current += 1
             self.do_run_in_chroot("rm -rf /etc/pacman.d/gnupg")
@@ -288,7 +285,7 @@ class InstallerEngine(QtCore.QThread):
             # optimize mirrorlist
             our_current += 1
             if (setup.internet_connectivity == True):
-                print " --> Optimizing pacman mirrorlist"
+                print(" --> Optimizing pacman mirrorlist")
                 self.update_progress(total=our_total, current=our_current, message="Optimizing pacman mirrorlist")
                 self.do_run_in_chroot("pacman -S --noconfirm reflector")
                 self.do_run_in_chroot("reflector -l 8 --sort rate --save /etc/pacman.d/mirrorlist")
@@ -296,7 +293,7 @@ class InstallerEngine(QtCore.QThread):
                 self.update_progress(total=our_total, current=our_current, message="Skip optimizing pacman mirrorlist")
 
             # remove live configuration packages (or w/e)
-            print " --> Removing live configuration (packages)"
+            print(" --> Removing live configuration (packages)")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Cleaning live-media configuration")
             self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-installer")
@@ -320,7 +317,7 @@ class InstallerEngine(QtCore.QThread):
                 self.do_run_in_chroot("rm -rf /etc/systemd/system/multi-user.target.wants/create-liveuser.service")
 
             # add new user
-            print " --> Adding new user"
+            print(" --> Adding new user")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Creating new user")         
             self.do_run_in_chroot("useradd -s %s -c \'%s\' -G audio,games,lp,nopasswdlogin,optical,power,scanner,shutdown,storage,sudo,video -m %s" % ("/bin/bash", setup.real_name, setup.username))
@@ -332,7 +329,7 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("rm -rf /tmp/newusers.conf")
             
             # write the /etc/fstab
-            print " --> Writing fstab"
+            print(" --> Writing fstab")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Writing filesystem mount information")
             # make sure fstab has default /proc and /sys entries
@@ -344,7 +341,7 @@ class InstallerEngine(QtCore.QThread):
                 if (partition.mount_as is not None and partition.mount_as != "None"):
                     partition_uuid = partition.partition.path # If we can't find the UUID we use the path
                     try:                    
-                        blkid = commands.getoutput('blkid').split('\n')
+                        blkid = subprocess.check_output('blkid').split('\n')
                         for blkid_line in blkid:
                             blkid_elements = blkid_line.split(':')
                             if blkid_elements[0] == partition.partition.path:
@@ -355,9 +352,9 @@ class InstallerEngine(QtCore.QThread):
                                         break
                                 break
                     except Exception:
-                        print '-'*60
+                        print('-'*60)
                         traceback.print_exc(file=sys.stdout)
-                        print '-'*60
+                        print('-'*60)
                                         
                     fstab.write("# %s\n" % (partition.partition.path))                            
                     
@@ -378,7 +375,7 @@ class InstallerEngine(QtCore.QThread):
             fstab.close()
             
             # write host+hostname infos
-            print " --> Writing hostname"
+            print(" --> Writing hostname")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting hostname")
             hostnamefh = open("/target/etc/hostname", "w")
@@ -397,7 +394,7 @@ class InstallerEngine(QtCore.QThread):
             hostsfh.close()
 
             # set the locale
-            print " --> Setting the locale"
+            print(" --> Setting the locale")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting locale")
             self.do_run("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.locale_code)
@@ -407,7 +404,7 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("echo \"LC_TIME=%s.UTF-8\" >> /etc/locale.conf" % setup.locale_code)
 
             # set the timezone
-            print " --> Setting the timezone"
+            print(" --> Setting the timezone")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting timezone")
             self.do_run("echo \"%s\" > /target/etc/timezone" % setup.timezone_code)
@@ -415,7 +412,7 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("ln -s /usr/share/zoneinfo/%s /etc/localtime" % setup.timezone)
 
             # set the keyboard options..
-            print " --> Configuring keyboard"
+            print(" --> Configuring keyboard")
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Configuring Keyboard")
             self.do_run_in_chroot("echo \"KEYMAP=%s\" > /etc/vconsole.conf" % setup.keyboard_layout)
@@ -437,7 +434,7 @@ class InstallerEngine(QtCore.QThread):
             keyboardfh.close()
 
             # configure lightdm
-            print " --> Configuring LightDM"
+            print(" --> Configuring LightDM")
             self.update_progress(total=our_total, current=our_current, message="Configuring LightDM")
             our_current += 1
             lightdmconfig = open("/target/etc/lightdm/lightdm.conf", "r")
@@ -456,7 +453,7 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("mv /etc/lightdm/lightdm.conf.new /etc/lightdm/lightdm.conf")
 
             # install kernel
-            print " --> Installing Archlinux kernel"
+            print(" --> Installing Archlinux kernel")
             self.update_progress(total=0, current=0, message="Installing kernel and ramdisk (this can take some minutes)")
             our_current += 1
             self.do_run_in_chroot("pacman -S --noconfirm --force linux")
@@ -467,21 +464,21 @@ class InstallerEngine(QtCore.QThread):
                 self.exit(2)
 
             # install grub
-            print " --> Configuring Grub"
+            print(" --> Configuring Grub")
             our_current += 1
             if(setup.bootloader_device is not None):
                 self.update_progress(total=our_total, current=our_current, message="Installing bootloader")
 
                 if(self.setup.bios_type == "efi"):
                     # EFI
-                    print " --> Installing grub (efi)"
+                    print(" --> Installing grub (efi)")
                     self.do_run_in_chroot("pacman -S --noconfirm --force %s" % setup.bootloader_type)
                     if(not os.path.exists("/target%s" % setup.bootloader_device)):
                         os.mkdir("/target%s" % setup.bootloader_device)
                     self.do_run_in_chroot("grub-install --target=x86_64-efi --efi-directory=%s --bootloader-id=BBQLinux --force"  % setup.bootloader_device)
                 else:
                     # BIOS
-                    print " --> Installing grub (bios)"
+                    print(" --> Installing grub (bios)")
                     self.do_run_in_chroot("pacman -S --noconfirm --force %s" % setup.bootloader_type)
                     self.do_run_in_chroot("grub-install --target=i386-pc --force %s" % setup.bootloader_device)
 
@@ -503,14 +500,14 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             if (setup.internet_connectivity == True):
                 if setup.installList:
-                    print " --> Installing additional packages"
+                    print(" --> Installing additional packages")
                     for package in setup.installList:
                         self.update_progress(total=our_total, current=our_current, message="Installing %s" % package)
                         self.do_run_in_chroot("pacman -S --noconfirm %s" % package)
 
             # now unmount it
             our_current += 1
-            print " --> Unmounting partitions"
+            print(" --> Unmounting partitions")
             try:
                 self.do_run("umount --force /target/dev/shm")
                 self.do_run("umount --force /target/dev/pts")
@@ -524,29 +521,29 @@ class InstallerEngine(QtCore.QThread):
                 self.do_unmount("/target")
                 self.do_unmount("/source/rootfs")
             except Exception:
-                print '-'*60
+                print('-'*60)
                 traceback.print_exc(file=sys.stdout)
-                print '-'*60
+                print('-'*60)
 
             self.update_progress(total=100, current=100, message="Installation finished")
-            print " --> All done"
+            print(" --> All done")
 
-            self.emit(QtCore.SIGNAL("installFinished()"))
+            self.install_finished_emit()
             self.exit(0)
             
         except Exception:            
-            print '-'*60
+            print('-'*60)
             traceback.print_exc(file=sys.stdout)
-            print '-'*60
+            print('-'*60)
 
     def do_run(self, command):
         os.system(command)
-        output = commands.getoutput(command)
+        output = subprocess.check_output(command)
         self.update_progressTextEdit(output)
 
     def do_run_in_chroot(self, command):
         os.system("chroot /target/ /usr/bin/sh -c \"%s\"" % command)
-        output = commands.getoutput("chroot /target/ /usr/bin/sh -c \"%s\"" % command)
+        output = subprocess.check_output("chroot /target/ /usr/bin/sh -c \"%s\"" % command)
         self.update_progressTextEdit(output)
         
     def do_configure_grub(self, our_total, our_current):
@@ -555,16 +552,16 @@ class InstallerEngine(QtCore.QThread):
         # Workaround for https://bugs.archlinux.org/task/37904
         self.do_run_in_chroot("rm -f /etc/grub.d/10_linux")
 
-        print " --> Running grub-mkconfig"
+        print(" --> Running grub-mkconfig")
         self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
-        grub_output = commands.getoutput("chroot /target/ /usr/bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
+        grub_output = subprocess.check_output("chroot /target/ /usr/bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
         grubfh = open("/var/log/live-installer-grub-output.log", "w")
         grubfh.writelines(grub_output)
         grubfh.close()
         
     def do_check_grub(self, our_total, our_current):
         self.update_progress(total=0, current=0, message="Checking bootloader")
-        print " --> Checking Grub configuration"
+        print(" --> Checking Grub configuration")
         time.sleep(5)
         found_theme = False
         found_entry = False
@@ -572,16 +569,16 @@ class InstallerEngine(QtCore.QThread):
             grubfh = open("/target/boot/grub/grub.cfg", "r")
             for line in grubfh:
                 line = line.rstrip("\r\n")
-                if("bbqlinux.png" in line):
+                if ("bbqlinux.png" in line):
                     found_theme = True
-                    print " --> Found Grub theme: %s " % line
+                    print(" --> Found Grub theme: %s " % line)
                 if ("menuentry" in line and "Arch Linux" in line):
                     found_entry = True
-                    print " --> Found Grub entry: %s " % line
+                    print(" --> Found Grub entry: %s " % line)
             grubfh.close()
             return (found_entry)
         else:
-            print "!No /target/boot/grub/grub.cfg file found!"
+            print("!No /target/boot/grub/grub.cfg file found!")
             return False
 
     def do_mount(self, device, dest, type, options=None):
@@ -591,7 +588,7 @@ class InstallerEngine(QtCore.QThread):
             cmd = "mount -o %s -t %s %s %s" % (options, type, device, dest)            
         else:
             cmd = "mount -t %s %s %s" % (type, device, dest)
-        print "EXECUTING: '%s'" % cmd
+        print("EXECUTING: '%s'" % cmd)
         p = Popen(cmd ,shell=True)        
         p.wait()
         return p.returncode
@@ -599,7 +596,7 @@ class InstallerEngine(QtCore.QThread):
     def do_unmount(self, mountpoint):
         ''' Unmount a filesystem '''
         cmd = "umount %s" % mountpoint
-        print "EXECUTING: '%s'" % cmd
+        print("EXECUTING: '%s'" % cmd)
         p = Popen(cmd, shell=True)
         p.wait()
         return p.returncode
@@ -646,29 +643,29 @@ class Setup(object):
     
     def print_setup(self):
         if "--debug" in sys.argv:  
-            print "-------------------------------------------------------------------------"
-            print "locale: %s" % self.locale_code
-            print "country: %s" % self.country_code
-            print "timezone: %s (%s)" % (self.timezone, self.timezone_code)        
-            print "keyboard: %s - %s (%s) - %s - %s (%s)" % (self.keyboard_model, self.keyboard_layout, self.keyboard_variant, self.keyboard_model_description, self.keyboard_layout_description, self.keyboard_variant_description)        
-            print "user: %s (%s)" % (self.username, self.real_name)
-            print "hostname: %s " % self.hostname
-            print "passwords: %s - %s" % (self.password1, self.password2)
-            print "bios_type: %s" % self.bios_type
-            print "bootloader_type: %s " % self.bootloader_type
-            print "bootloader_device: %s " % self.bootloader_device
-            print "target_disk: %s " % self.target_disk
-            print "disks: %s " % self.disks                       
-            print "partitions:"
+            print("-------------------------------------------------------------------------")
+            print("locale: %s" % self.locale_code)
+            print("country: %s" % self.country_code)
+            print("timezone: %s (%s)" % (self.timezone, self.timezone_code))
+            print("keyboard: %s - %s (%s) - %s - %s (%s)" % (self.keyboard_model, self.keyboard_layout, self.keyboard_variant, self.keyboard_model_description, self.keyboard_layout_description, self.keyboard_variant_description))
+            print("user: %s (%s)" % (self.username, self.real_name))
+            print("hostname: %s " % self.hostname)
+            print("passwords: %s - %s" % (self.password1, self.password2))
+            print("bios_type: %s" % self.bios_type)
+            print("bootloader_type: %s " % self.bootloader_type)
+            print("bootloader_device: %s " % self.bootloader_device)
+            print("target_disk: %s " % self.target_disk)
+            print("disks: %s " % self.disks)          
+            print("partitions:")
             for partition in self.partitions:
                 partition.print_partition()
-            print "-------------------------------------------------------------------------"
-            print "Internet connectivity: %s" % self.internet_connectivity
-            print "-------------------------------------------------------------------------"
-            print "Additional packages:"
+            print("-------------------------------------------------------------------------")
+            print("Internet connectivity: %s" % self.internet_connectivity)
+            print("-------------------------------------------------------------------------")
+            print("Additional packages:")
             for package in setup.installList:
-                print package
-            print "-------------------------------------------------------------------------"
+                print(package)
+            print("-------------------------------------------------------------------------")
 
 class PartitionSetup(object):
     name = ""    
@@ -725,4 +722,4 @@ class PartitionSetup(object):
         self.end = partition.geometry.end
     
     def print_partition(self):
-        print "Device: %s, format as: %s, mount as: %s" % (self.partition.path, self.format_as, self.mount_as)
+        print("Device: %s, format as: %s, mount as: %s" % (self.partition.path, self.format_as, self.mount_as))

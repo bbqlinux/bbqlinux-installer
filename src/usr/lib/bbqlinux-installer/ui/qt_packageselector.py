@@ -4,7 +4,7 @@ import os
 import subprocess
 import tarfile
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtGui, QtCore, uic
 
 PKG_REPO = 0
 PKG_NAME = 1
@@ -364,7 +364,7 @@ class PackageSelector(object):
         self.repoList = repo_list
         for repo in repo_list:
             item = QtGui.QListWidgetItem(repo)
-            item.setData(32, QtCore.QVariant(QtCore.QString(repo)))
+            item.setData(32, QtCore.QVariant(repo))
             self.ui.repoListWidget.addItem(item)
 
     def build_package_list(self, workerList, workerRepoList):
