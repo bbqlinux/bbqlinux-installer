@@ -231,7 +231,7 @@ class InstallerEngine(QtCore.QThread):
             self.step_copy_files(source="/source/rootfs/", destination="/target/")
 
             # Steps:
-            our_total = 15
+            our_total = 14
             our_current = 0
             # chroot
             print " --> Chrooting"
@@ -262,19 +262,7 @@ class InstallerEngine(QtCore.QThread):
 
             # this is needed to use networking within the chroot
             self.do_run("cp -f /etc/resolv.conf /target/etc/resolv.conf")
-                                          
-            # remove live user
-            print " --> Removing live user"
-            live_user = self.live_user
-            our_current += 1
-            self.update_progress(total=our_total, current=our_current, message="Removing live configuration (user)")
-            self.do_run_in_chroot("userdel -r %s" % live_user)
-            # also remove arch user in case it's present
-            self.do_run_in_chroot("userdel -r arch")
-            # can happen
-            if(os.path.exists("/target/home/%s" % live_user)):
-                self.do_run_in_chroot("rm -rf /home/%s" % live_user)
-            
+
             # initialize pacman keyring
             print " --> Initializing pacman keyring"
             self.update_progress(total=0, current=0, message="Configuring Pacman")
@@ -312,12 +300,12 @@ class InstallerEngine(QtCore.QThread):
                 self.do_run_in_chroot("rm -f /etc/skel/.config/autostart/bbqlinux-greeter.desktop")
 
             # remove liveuser creation service
-            if(os.path.exists("/target/etc/bbqlinux/create-liveuser")):
-                self.do_run_in_chroot("rm -rf /etc/bbqlinux/create-liveuser")
-            if(os.path.exists("/target/etc/systemd/system/create-liveuser.service")):
-                self.do_run_in_chroot("rm -rf /etc/systemd/system/create-liveuser.service")
-            if(os.path.exists("/target/etc/systemd/system/multi-user.target.wants/create-liveuser.service")):
-                self.do_run_in_chroot("rm -rf /etc/systemd/system/multi-user.target.wants/create-liveuser.service")
+            if(os.path.exists("/target/etc/bbqlinux/prepare_livesystem.sh")):
+                self.do_run_in_chroot("rm -rf /etc/bbqlinux/prepare_livesystem.sh")
+            if(os.path.exists("/target/etc/systemd/system/prepare_livesystem.service")):
+                self.do_run_in_chroot("rm -rf /etc/systemd/system/prepare_livesystem.service")
+            if(os.path.exists("/target/etc/systemd/system/multi-user.target.wants/prepare_livesystem.service")):
+                self.do_run_in_chroot("rm -rf /etc/systemd/system/multi-user.target.wants/prepare_livesystem.service")
 
             # add new user
             print " --> Adding new user"
@@ -411,7 +399,7 @@ class InstallerEngine(QtCore.QThread):
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Setting timezone")
             self.do_run("echo \"%s\" > /target/etc/timezone" % setup.timezone_code)
-            self.do_run_in_chroot("rm /etc/localtime")
+            self.do_run_in_chroot("rm -f /etc/localtime")
             self.do_run_in_chroot("ln -s /usr/share/zoneinfo/%s /etc/localtime" % setup.timezone)
 
             # set the keyboard options..
@@ -455,16 +443,11 @@ class InstallerEngine(QtCore.QThread):
             self.do_run_in_chroot("rm /etc/lightdm/lightdm.conf")
             self.do_run_in_chroot("mv /etc/lightdm/lightdm.conf.new /etc/lightdm/lightdm.conf")
 
-            # install kernel
-            print " --> Installing Archlinux kernel"
-            self.update_progress(total=0, current=0, message="Installing kernel and ramdisk (this can take some minutes)")
+            # generate ramdisk
+            print " --> Generating Ramdisk"
+            self.update_progress(total=0, current=0, message="Generating ramdisk")
             our_current += 1
-            self.do_run_in_chroot("pacman -S --noconfirm --force linux")
-
-            # check if kernel exists
-            if(not os.path.exists("/target/boot/vmlinuz-linux")):
-                self.error_message(message="The kernel wasn't installed properly!", critical=True)
-                self.exit(2)
+            self.do_run_in_chroot("mkinitcpio -p linux")
 
             # install grub
             print " --> Configuring Grub"
