@@ -1,13 +1,13 @@
 # Maintainer: Daniel Hillenbrand <codeworkx [at] bbqlinux [dot] org>
 
 pkgname=bbqlinux-installer
-pkgver=1.2.1
+pkgver=1.2.2
 pkgrel=1
 pkgdesc="The BBQLinux Installer"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-installer"
 license=('GPL')
-depends=('inxi' 'python2' 'qt4' 'python2-pyqt4' 'parted>=3.0' 'pyparted>=3.8' 'python2-geoip')
+depends=('inxi' 'python2' 'qt4' 'python2-pyqt4' 'parted>=3.0' 'python2-pyparted' 'python2-geoip')
 replaces=('bbqinstaller')
 
 package() {
