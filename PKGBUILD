@@ -1,7 +1,7 @@
-# Maintainer: Daniel Hillenbrand <codeworkx@bbqlinux.org>
+# Maintainer: Daniel Hillenbrand <codeworkx [at] bbqlinux [dot] org>
 
 pkgname=bbqlinux-installer
-pkgver=1.2.0
+pkgver=1.2.1
 pkgrel=1
 pkgdesc="The BBQLinux Installer"
 arch=('any')

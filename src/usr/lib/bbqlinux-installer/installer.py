@@ -283,10 +283,10 @@ class InstallerEngine(QtCore.QThread):
             else:
                 self.update_progress(total=our_total, current=our_current, message="Skip optimizing pacman mirrorlist")
 
-            # remove live configuration packages (or w/e)
-            print " --> Removing live configuration (packages)"
+            # remove live configuration packages
+            print " --> Removing livesystem configuration"
             our_current += 1
-            self.update_progress(total=our_total, current=our_current, message="Cleaning live-media configuration")
+            self.update_progress(total=our_total, current=our_current, message="Removing livesystem configuration")
             self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-installer")
             self.do_run_in_chroot("pacman -R --noconfirm bbqlinux-livemedia")
             
@@ -299,9 +299,9 @@ class InstallerEngine(QtCore.QThread):
             if(os.path.exists("/target/etc/skel/.config/autostart/bbqlinux-greeter.desktop")):
                 self.do_run_in_chroot("rm -f /etc/skel/.config/autostart/bbqlinux-greeter.desktop")
 
-            # remove liveuser creation service
-            if(os.path.exists("/target/etc/bbqlinux/prepare_livesystem.sh")):
-                self.do_run_in_chroot("rm -rf /etc/bbqlinux/prepare_livesystem.sh")
+            # remove liveuser service
+            if(os.path.exists("/target/usr/bin/prepare_livesystem")):
+                self.do_run_in_chroot("rm -rf /usr/bin/prepare_livesystem")
             if(os.path.exists("/target/etc/systemd/system/prepare_livesystem.service")):
                 self.do_run_in_chroot("rm -rf /etc/systemd/system/prepare_livesystem.service")
             if(os.path.exists("/target/etc/systemd/system/multi-user.target.wants/prepare_livesystem.service")):
