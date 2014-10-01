@@ -64,12 +64,14 @@ class InstallerEngine(QtCore.QThread):
                 if partition.format_as == "swap":
                     cmd = "mkswap %s" % partition.partition.path
                 else:
-                    if (partition.format_as == "xfs"):
+                    if (partition.format_as == "ext2") or (partition.format_as == "ext3") or (partition.format_as == "ext4") or (partition.format_as == "ext4dev"):
+                        cmd = "mkfs.%s -qF %s" % (partition.format_as, partition.partition.path)
+                    elif (partition.format_as == "xfs"):
                         cmd = "mkfs.%s -fq %s" % (partition.format_as, partition.partition.path)
                     elif (partition.format_as == "vfat"):
                         cmd = "mkfs.%s -F32 %s" % (partition.format_as, partition.partition.path)
                     else:
-                        cmd = "mkfs.%s -q %s" % (partition.format_as, partition.partition.path) # works with bfs, btrfs, ext2, ext3, ext4, jfs, minix, msdos, ntfs
+                        cmd = "mkfs.%s -q %s" % (partition.format_as, partition.partition.path) # works with bfs, btrfs, jfs, minix, msdos, ntfs
 					
                 print "EXECUTING: '%s'" % cmd
                 p = Popen(cmd, shell=True)
