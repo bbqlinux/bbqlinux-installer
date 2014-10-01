@@ -1500,27 +1500,32 @@ class PartitionEditDialog(object):
         cur_index = -1
         set_index = None
         ''' Build supported filesystems list '''
-        if "swap" in format_as:        
-            self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("swap"))
-            self.partitionEditBox.filesystemComboBox.setItemData(0, QtCore.QVariant(QtCore.QString("swap")), 32)
-        else:
-            try:
-                cur_index += 1
-                self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("None"))
-                self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("None")), 32)
-                for item in os.listdir("/usr/bin"):
-                    if(item.startswith("mkfs.")):
-                        cur_index += 1
-                        fstype = item.split(".")[1]
-                        self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString(fstype))
-                        self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(fstype)), 32)
-                        if(format_as == fstype):
-                            set_index = cur_index
-            except Exception:
-                print '-'*60
-                traceback.print_exc(file=sys.stdout)
-                print '-'*60
-                print "Could not build supported filesystems list!"
+        try:
+            cur_index += 1
+            self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString("None"))
+            self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString("None")), 32)
+            for item in os.listdir("/usr/bin"):
+                if(item.startswith("mkfs.")):
+                    cur_index += 1
+                    fstype = item.split(".")[1]
+                    self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString(fstype))
+                    self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(fstype)), 32)
+                    if(format_as == fstype):
+                        set_index = cur_index
+                if(item.startswith("mkswap")):
+                    cur_index += 1
+                    fstype = "swap"
+                    self.partitionEditBox.filesystemComboBox.addItem(QtCore.QString(fstype))
+                    self.partitionEditBox.filesystemComboBox.setItemData(cur_index, QtCore.QVariant(QtCore.QString(fstype)), 32)
+                    if(format_as == fstype):
+                        set_index = cur_index
+                        self.partitionEditBox.mountpointLineEdit.setText(QtCore.QString("swap"))
+
+        except Exception:
+            print '-'*60
+            traceback.print_exc(file=sys.stdout)
+            print '-'*60
+            print "Could not build supported filesystems list!"
         
         # If we've found the current fstype, select it
         if (not set_index is None):
@@ -1550,14 +1555,19 @@ class PartitionEditDialog(object):
         index = self.partitionEditBox.filesystemComboBox.currentIndex()
         format_as = str(self.partitionEditBox.filesystemComboBox.itemData(index, 32).toString())
 
-        if (len(mount_as) > 0 and len(format_as) > 0):
-            pos = 0
-            if (self.validator.validate(QtCore.QString(mount_as), pos) == (QtGui.QValidator.Acceptable, pos)):
-                self.mount_as = mount_as
-                self.format_as = format_as
-                self.partitionEditBox.done(0)
-            else:
-                # Draw mount_as red if not a valid linux path
-                pal = QtGui.QPalette()
-                pal.setColor(QtGui.QPalette.Text, QtGui.QColor("#FF0000"))
-                self.partitionEditBox.mountpointLineEdit.setPalette(pal)
+        if(format_as == "swap"):
+            self.mount_as = "swap"
+            self.format_as = format_as
+            self.partitionEditBox.done(0)
+        else:
+            if (len(mount_as) > 0 and len(format_as) > 0):
+                pos = 0
+                if (self.validator.validate(QtCore.QString(mount_as), pos) == (QtGui.QValidator.Acceptable, pos)):
+                    self.mount_as = mount_as
+                    self.format_as = format_as
+                    self.partitionEditBox.done(0)
+                else:
+                    # Draw mount_as red if not a valid linux path
+                    pal = QtGui.QPalette()
+                    pal.setColor(QtGui.QPalette.Text, QtGui.QColor("#FF0000"))
+                    self.partitionEditBox.mountpointLineEdit.setPalette(pal)
