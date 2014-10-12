@@ -315,7 +315,7 @@ class InstallerEngine(QtCore.QThread):
             print " --> Adding new user"
             our_current += 1
             self.update_progress(total=our_total, current=our_current, message="Creating new user")         
-            self.do_run_in_chroot("useradd -s %s -c \'%s\' -G audio,games,lp,nopasswdlogin,optical,power,scanner,shutdown,storage,sudo,video -m %s" % ("/bin/bash", setup.real_name, setup.username))
+            self.do_run_in_chroot("useradd -s %s -c \'%s\' -G audio,games,lp,lpadmin,nopasswdlogin,optical,power,scanner,shutdown,storage,sudo,video -m %s" % ("/bin/bash", setup.real_name, setup.username))
             newusers = open("/target/tmp/newusers.conf", "w")
             newusers.write("%s:%s\n" % (setup.username, setup.password1))
             newusers.write("root:%s\n" % setup.password1)
